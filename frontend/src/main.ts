@@ -43,6 +43,8 @@ async function bootstrap() {
   // This must happen after pinia is installed but before router and i18n
   const appStore = useAppStore()
   appStore.initFromInjectedConfig()
+  // 挂载前恢复品牌主题色，避免首帧闪变
+  appStore.initBrandTheme()
 
   // Set document title immediately after config is loaded
   if (appStore.siteName && appStore.siteName !== 'Sub2API') {

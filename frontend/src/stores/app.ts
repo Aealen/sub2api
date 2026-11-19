@@ -14,6 +14,13 @@ import {
 } from '@/api/admin/system'
 import { getPublicSettings as fetchPublicSettingsAPI } from '@/api/auth'
 
+// 品牌主题色标识（与明暗模式正交）。
+// 'teal'：上游默认青色系；'aowu'：Aowu 品牌紫色系。
+export type BrandTheme = 'teal' | 'aowu'
+
+const BRAND_THEME_STORAGE_KEY = 'brandTheme'
+const BRAND_THEMES: BrandTheme[] = ['teal', 'aowu']
+
 export const useAppStore = defineStore('app', () => {
   // ==================== State ====================
 
@@ -22,6 +29,9 @@ export const useAppStore = defineStore('app', () => {
   const sidebarScrollTop = ref<number>(0)
   const loading = ref<boolean>(false)
   const toasts = ref<Toast[]>([])
+
+  // 品牌主题色状态。应用方式：写入 <html data-theme='...'>，由 style.css 的 CSS 变量定义生效。
+  const brandTheme = ref<BrandTheme>('teal')
 
   // Public settings cache state
   const publicSettingsLoaded = ref<boolean>(false)
@@ -435,6 +445,30 @@ export const useAppStore = defineStore('app', () => {
     return false
   }
 
+  // ==================== 品牌主题色 ====================
+
+  // 将当前主题写入 DOM（style.css 按 [data-theme] 切换 primary 变量组）。
+  function applyBrandThemeToDom(theme: BrandTheme): void {
+    if (theme === 'teal') {
+      delete document.documentElement.dataset.theme
+    } else {
+      document.documentElement.dataset.theme = theme
+    }
+  }
+
+  // 启动时恢复本地选择（main.ts 在挂载前调用，避免主题闪变）。
+  function initBrandTheme(): void {
+    const saved = localStorage.getItem(BRAND_THEME_STORAGE_KEY) as BrandTheme | null
+    brandTheme.value = saved && BRAND_THEMES.includes(saved) ? saved : 'teal'
+    applyBrandThemeToDom(brandTheme.value)
+  }
+
+  function setBrandTheme(theme: BrandTheme): void {
+    brandTheme.value = theme
+    localStorage.setItem(BRAND_THEME_STORAGE_KEY, theme)
+    applyBrandThemeToDom(theme)
+  }
+
   // ==================== Return Store API ====================
 
   return {
@@ -444,6 +478,7 @@ export const useAppStore = defineStore('app', () => {
     sidebarScrollTop,
     loading,
     toasts,
+    brandTheme,
 
     // Public settings state
     publicSettingsLoaded,
@@ -492,6 +527,10 @@ export const useAppStore = defineStore('app', () => {
     // Public settings actions
     fetchPublicSettings,
     clearPublicSettingsCache,
-    initFromInjectedConfig
+    initFromInjectedConfig,
+
+    // 品牌主题色 actions
+    initBrandTheme,
+    setBrandTheme
   }
 })

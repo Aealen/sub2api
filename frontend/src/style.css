@@ -2,6 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   品牌主题色变量（tailwind.config.js 的 primary 色板引用）
+   值为 "R G B" 通道，配合 <alpha-value> 支持透明度写法。
+   默认主题：Teal 青色系（上游原版，与 LOGO 声波色同源）；
+   [data-theme='aowu']：Violet 紫色系（aowu-ai LOGO 月亮主色）。
+   切换由 app store 的 brandTheme 写入 <html data-theme='...'>。
+   ============================================================ */
+:root {
+  --color-primary-50: 240 253 250;   /* #f0fdfa teal-50 */
+  --color-primary-100: 204 251 241;  /* #ccfbf1 */
+  --color-primary-200: 153 246 228;  /* #99f6e4 */
+  --color-primary-300: 94 234 212;   /* #5eead4 */
+  --color-primary-400: 45 212 191;   /* #2dd4bf */
+  --color-primary-500: 20 184 166;   /* #14b8a6 */
+  --color-primary-600: 13 148 136;   /* #0d9488 */
+  --color-primary-700: 15 118 110;   /* #0f766e */
+  --color-primary-800: 17 94 89;     /* #115e59 */
+  --color-primary-900: 19 78 74;     /* #134e4a */
+  --color-primary-950: 4 47 46;      /* #042f2e */
+}
+
+[data-theme='aowu'] {
+  --color-primary-50: 245 243 255;   /* #f5f3ff violet-50 */
+  --color-primary-100: 237 233 254;  /* #ede9fe */
+  --color-primary-200: 221 214 254;  /* #ddd6fe */
+  --color-primary-300: 196 181 253;  /* #c4b5fd */
+  --color-primary-400: 167 139 250;  /* #a78bfa */
+  --color-primary-500: 139 92 246;   /* #8b5cf6 */
+  --color-primary-600: 124 58 237;   /* #7c3aed */
+  --color-primary-700: 109 40 217;   /* #6d28d9 */
+  --color-primary-800: 91 33 182;    /* #5b21b6 */
+  --color-primary-900: 76 29 149;    /* #4c1d95 */
+  --color-primary-950: 46 16 101;    /* #2e1065 */
+}
+
 @layer base {
   * {
     @apply border-gray-200 dark:border-dark-700;
@@ -775,4 +810,39 @@
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
+}
+
+:root {
+  /* Aowu 品牌粉（LOGO 字标色），供萌系点缀使用 */
+  --color-brand-pink: 236 72 153;       /* #ec4899 pink-500 */
+  --color-brand-pink-light: 244 114 182; /* #f472b6 pink-400 */
+}
+
+/* [data-theme='aowu'] 萌系覆盖：平铺写法保证兼容 */
+[data-theme='aowu'] .btn-primary {
+  background-image: linear-gradient(
+    135deg,
+    rgb(var(--color-primary-500)) 0%,
+    rgb(var(--color-brand-pink)) 100%
+  );
+  border-radius: 1rem;
+}
+[data-theme='aowu'] .btn-primary:hover {
+  background-image: linear-gradient(
+    135deg,
+    rgb(var(--color-primary-600)) 0%,
+    rgb(var(--color-brand-pink)) 100%
+  );
+}
+[data-theme='aowu'] .card {
+  border-radius: 1.5rem;
+}
+[data-theme='aowu'] .input {
+  border-radius: 1rem;
+}
+[data-theme='aowu'] .sidebar-link {
+  border-radius: 0.875rem;
+}
+[data-theme='aowu'] .sidebar-logo {
+  filter: drop-shadow(0 0 10px rgb(var(--color-brand-pink-light) / 0.35));
 }

@@ -112,6 +112,11 @@ backend/data/
 backend/config.yaml
 deploy/config.yaml
 backend/.installed
+backend/logs/
+backend/dev.sh
+
+# 本地工具产物
+.playwright-mcp/
 
 # ===================
 # 其他

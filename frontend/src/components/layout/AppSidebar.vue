@@ -14,7 +14,7 @@
         class="sidebar-logo flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl shadow-glow transition-opacity hover:opacity-80"
         @click="handleMenuItemClick(homePath)"
       >
-        <img v-if="settingsLoaded" :src="siteLogo || '/logo.svg'" alt="Logo" class="h-full w-full object-contain" />
+        <img v-if="settingsLoaded" :src="siteLogo || '/logo.png'" alt="Logo" class="h-full w-full object-contain" />
       </router-link>
       <div class="sidebar-brand" :class="{ 'sidebar-brand-collapsed': sidebarCollapsed }" :aria-hidden="sidebarCollapsed ? 'true' : 'false'">
         <router-link
@@ -149,6 +149,46 @@
 
     <!-- Bottom Section -->
     <div class="mt-auto border-t border-gray-100 p-3 dark:border-dark-800">
+      <!-- Brand Theme Toggle（品牌主题色，与明暗模式正交） -->
+      <div class="relative mb-2">
+        <button
+          @click="brandThemeOpen = !brandThemeOpen"
+          class="sidebar-link w-full"
+          :class="{ 'sidebar-link-collapsed': sidebarCollapsed }"
+          :title="sidebarCollapsed ? t('nav.brandTheme') : undefined"
+        >
+          <SwatchIcon />
+          <span class="sidebar-label" :class="{ 'sidebar-label-collapsed': sidebarCollapsed }" :aria-hidden="sidebarCollapsed ? 'true' : 'false'">{{
+            t('nav.brandTheme')
+          }}</span>
+        </button>
+        <!-- 主题色选择菜单 -->
+        <transition name="fade">
+          <div
+            v-if="brandThemeOpen"
+            class="absolute bottom-full left-0 z-20 mb-1 w-44 rounded-xl border border-gray-200 bg-white p-1.5 shadow-lg dark:border-dark-700 dark:bg-dark-800"
+          >
+            <button
+              v-for="option in brandThemeOptions"
+              :key="option.id"
+              type="button"
+              class="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-dark-700"
+              :class="{ 'bg-primary-50 dark:bg-primary-900/20': appStore.brandTheme === option.id }"
+              @click="selectBrandTheme(option.id)"
+            >
+              <span
+                class="h-4 w-4 flex-shrink-0 rounded-full ring-1 ring-black/10 dark:ring-white/20"
+                :style="{ background: option.swatch }"
+              ></span>
+              <span class="flex-1 text-left text-gray-700 dark:text-gray-200">{{ option.label }}</span>
+              <svg v-if="appStore.brandTheme === option.id" class="h-4 w-4 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </button>
+          </div>
+        </transition>
+      </div>
+
       <!-- Theme Toggle -->
       <button
         @click="toggleTheme"
@@ -481,6 +521,10 @@ const PluginIcon = {
   render: () => h(Icon, { name: 'cube' })
 }
 
+const ModelPlazaIcon = {
+  render: () => h(Icon, { name: 'grid' })
+}
+
 const MCPIcon = {
   render: () => h(Icon, { name: 'mcp' })
 }
@@ -705,6 +749,27 @@ const ChevronDownIcon = {
     )
 }
 
+// 品牌主题色选择器图标（调色板）
+const SwatchIcon = {
+  render: () =>
+    h(
+      'svg',
+      { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '1.5' },
+      [
+        h('path', {
+          'stroke-linecap': 'round',
+          'stroke-linejoin': 'round',
+          d: 'M4.098 19.902a3.75 3.75 0 005.803 0l6.504-7.853a3.75 3.75 0 00.552-4.646l.99-1.14a.75.75 0 01.99-.105l1.842 1.383a.75.75 0 01.282.63M4.098 19.902l4.965-6.015a.75.75 0 011.06-.04l2.12 2.03a.75.75 0 01.03 1.06l-4.966 6.016a3.75 3.75 0 01-5.803 0zM9.342 5.543a3.75 3.75 0 00-4.65.552L3.05 7.863a.75.75 0 00.055 1.05l3.72 3.57M12.5 3.75a.75.75 0 01.75-.75h4.5a.75.75 0 01.75.75v3a.75.75 0 01-.75.75h-4.5a.75.75 0 01-.75-.75v-3z'
+        }),
+        h('path', {
+          'stroke-linecap': 'round',
+          'stroke-linejoin': 'round',
+          d: 'M10.5 8.25h.008v.008H10.5V8.25zm-3.75 3h.008v.008H6.75v-.008zm-.75 3.75h.008v.008H6v-.008z'
+        })
+      ]
+    )
+}
+
 // Public-settings flags go through the registry in utils/featureFlags.ts,
 // which handles the opt-in vs opt-out fallback when settings haven't loaded
 // yet. Admin-only flags (not in public settings) stay inline below.
@@ -712,6 +777,7 @@ const flagChannelMonitor = makeSidebarFlag(FeatureFlags.channelMonitor)
 const flagPayment = makeSidebarFlag(FeatureFlags.payment)
 const flagAvailableChannels = makeSidebarFlag(FeatureFlags.availableChannels)
 const flagSubscription = makeSidebarFlag(FeatureFlags.subscription)
+const flagModelPlaza = makeSidebarFlag(FeatureFlags.modelPlaza)
 
 // 购买入口文案随站点计费模式切换：仅充值 → 「充值」，仅订阅 → 「订阅」，否则「充值/订阅」。
 const purchaseNavLabel = computed(() => {
@@ -748,6 +814,7 @@ function buildSelfNavItems(withDashboard: boolean): NavItem[] {
     { path: '/usage', label: t('nav.usage'), icon: ChartIcon, hideInSimpleMode: true },
     { path: '/available-channels', label: t('nav.availableChannels'), icon: ChannelIcon, hideInSimpleMode: true, featureFlag: flagAvailableChannels },
     { path: '/monitor', label: t('nav.channelStatus'), icon: SignalIcon, featureFlag: flagChannelMonitor },
+    { path: '/model-plaza', label: t('nav.modelPlaza'), icon: ModelPlazaIcon, featureFlag: flagModelPlaza },
     { path: '/subscriptions', label: t('nav.mySubscriptions'), icon: CreditCardIcon, hideInSimpleMode: true, featureFlag: flagSubscription },
     { path: '/purchase', label: purchaseNavLabel.value, icon: RechargeSubscriptionIcon, hideInSimpleMode: true, featureFlag: flagPayment },
     { path: '/orders', label: t('nav.myOrders'), icon: OrderListIcon, hideInSimpleMode: true, featureFlag: flagPayment },
@@ -884,6 +951,20 @@ const adminNavItems = computed((): NavItem[] => {
 
 function toggleSidebar() {
   appStore.toggleSidebar()
+}
+
+// ==================== 品牌主题色切换 ====================
+const brandThemeOpen = ref(false)
+
+// 色卡使用各主题的代表色（500 档），仅作选择器里的视觉标识。
+const brandThemeOptions = computed(() => [
+  { id: 'teal' as const, label: t('nav.brandThemeTeal'), swatch: '#14b8a6' },
+  { id: 'aowu' as const, label: t('nav.brandThemeAowu'), swatch: '#8b5cf6' }
+])
+
+function selectBrandTheme(id: 'teal' | 'aowu') {
+  appStore.setBrandTheme(id)
+  brandThemeOpen.value = false
 }
 
 function toggleTheme() {
