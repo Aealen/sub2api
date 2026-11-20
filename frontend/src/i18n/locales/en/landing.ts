@@ -13,6 +13,30 @@ export default {
     dashboard: 'Dashboard',
     login: 'Login',
     getStarted: 'Get Started',
+    stats: {
+      models: "Models Indexed",
+      groups: "Available Groups",
+      platforms: "Platforms Supported"
+    },
+    pricing: {
+      title: "Groups & Pricing at a Glance",
+      subtitle: "Real group pricing — see the Model Plaza for the full catalog",
+      models: "models",
+      input: "Input",
+      output: "Output",
+      viewAll: "View Full Model Plaza"
+    },
+    guide: {
+      title: "Quick Integration",
+      subtitle: "Works with mainstream protocols — just change the Base URL and API Key",
+      anthropic: "Anthropic Protocol",
+      anthropicDesc: "Claude Code / Anthropic SDK, path without /v1",
+      openaiChat: "OpenAI Chat Protocol",
+      openaiChatDesc: "OpenAI SDK & third-party clients",
+      openaiResponses: "OpenAI Responses",
+      openaiResponsesDesc: "Codex and other Responses-protocol clients",
+      hint: "Set Base URL to this site, use your platform API key"
+    },
     goToDashboard: 'Go to Dashboard',
     // User-focused value proposition
     heroSubtitle: 'One Key, All AI Models',

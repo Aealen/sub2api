@@ -13,6 +13,30 @@ export default {
     dashboard: '控制台',
     login: '登录',
     getStarted: '立即开始',
+    stats: {
+      models: "收录模型",
+      groups: "可用分组",
+      platforms: "支持平台"
+    },
+    pricing: {
+      title: "分组与价格速览",
+      subtitle: "真实分组定价一览，完整价目请进入模型广场",
+      models: "个模型",
+      input: "输入",
+      output: "输出",
+      viewAll: "查看完整模型广场"
+    },
+    guide: {
+      title: "快速接入",
+      subtitle: "兼容主流协议，现有 SDK 只需改 Base URL 与 API Key",
+      anthropic: "Anthropic 协议",
+      anthropicDesc: "Claude Code / Anthropic SDK，路径不带 /v1",
+      openaiChat: "OpenAI Chat 协议",
+      openaiChatDesc: "OpenAI SDK / 第三方客户端",
+      openaiResponses: "OpenAI Responses",
+      openaiResponsesDesc: "Codex 等 Responses 协议客户端",
+      hint: "Base URL 填本站地址，API Key 使用平台密钥"
+    },
     goToDashboard: '进入控制台',
     // 新增：面向用户的价值主张
     heroSubtitle: '一个密钥，畅用多个 AI 模型',
