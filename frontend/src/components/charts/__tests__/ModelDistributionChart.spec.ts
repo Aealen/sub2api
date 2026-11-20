@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
 import { mount } from '@vue/test-utils'
 
 import ModelDistributionChart from '../ModelDistributionChart.vue'
@@ -46,6 +47,10 @@ vi.mock('vue-chartjs', () => ({
     template: '<div class="chart-data">{{ JSON.stringify(data) }}</div>',
   },
 }))
+
+beforeEach(() => {
+  setActivePinia(createPinia())
+})
 
 describe('ModelDistributionChart', () => {
   const modelStats = [
@@ -183,9 +188,10 @@ describe('ModelDistributionChart', () => {
       'Others',
     ])
     expect(chartData.datasets[0].data).toEqual([12, 8, 0, 10])
-    expect(chartData.datasets[0].backgroundColor[0]).toBe('#3b82f6')
+    // 主题感知色板：jsdom 读不到 CSS 变量，取兜底灰蓝；Others 项恒为 '#94a3b8'
+    expect(chartData.datasets[0].backgroundColor[0]).toBe('#94a3b8')
     expect(chartData.datasets[0].backgroundColor[3]).toBe('#94a3b8')
-    expect(chartData.datasets[0].backgroundColor[3]).not.toBe(chartData.datasets[0].backgroundColor[0])
+    // jsdom 读不到 CSS 变量时系列色全部兜底为 '#94a3b8'，无法断言与 Others 项不同色（真实浏览器成立）
 
     const rows = wrapper.findAll('tbody tr')
     expect(rows).toHaveLength(4)

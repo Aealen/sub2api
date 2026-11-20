@@ -192,6 +192,8 @@ export default {
     lightMode: 'Light Mode',
     darkMode: 'Dark Mode',
     brandTheme: "Theme Color",
+    appearance: "Appearance",
+    appearanceMode: "Mode",
     brandThemeTeal: "Classic Teal",
     brandThemeAowu: "Aowu Purple",
     collapse: 'Collapse',

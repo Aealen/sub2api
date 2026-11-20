@@ -21,7 +21,18 @@
   --color-primary-800: 17 94 89;     /* #115e59 */
   --color-primary-900: 19 78 74;     /* #134e4a */
   --color-primary-950: 4 47 46;      /* #042f2e */
-}
+  /* dark 底色板默认 = slate 蓝灰（上游原样）；[data-theme=aowu] 在其后覆盖为紫调暗色板（同特异性按源顺序取胜，顺序关键） */
+  --color-dark-50: 248 250 252;
+  --color-dark-100: 241 245 249;
+  --color-dark-200: 226 232 240;
+  --color-dark-300: 203 213 225;
+  --color-dark-400: 148 163 184;
+  --color-dark-500: 100 116 139;
+  --color-dark-600: 71 85 105;
+  --color-dark-700: 51 65 85;
+  --color-dark-800: 30 41 59;
+  --color-dark-900: 15 23 42;
+  --color-dark-950: 2 6 23;}
 
 [data-theme='aowu'] {
   --color-primary-50: 245 243 255;   /* #f5f3ff violet-50 */
@@ -35,6 +46,19 @@
   --color-primary-800: 91 33 182;    /* #5b21b6 */
   --color-primary-900: 76 29 149;    /* #4c1d95 */
   --color-primary-950: 46 16 101;    /* #2e1065 */
+
+  /* dark 底色板紫调覆盖：明度梯度对齐原 slate，色相转紫 */
+  --color-dark-50: 246 244 251;
+  --color-dark-100: 236 233 246;
+  --color-dark-200: 217 212 234;
+  --color-dark-300: 185 176 214;
+  --color-dark-400: 145 132 179;
+  --color-dark-500: 107 95 146;
+  --color-dark-600: 78 68 112;
+  --color-dark-700: 56 48 79;
+  --color-dark-800: 37 31 56;
+  --color-dark-900: 23 18 38;
+  --color-dark-950: 11 8 20;
 }
 
 @layer base {
@@ -813,6 +837,13 @@
 }
 
 :root {
+  /* 品牌青（LOGO 声波色）常量，aowu 主题下用于收敛装饰性绿色 */
+  --color-brand-teal-100: 204 251 241;
+  --color-brand-teal-200: 153 246 228;
+  --color-brand-teal-400: 45 212 191;
+  --color-brand-teal-600: 13 148 136;
+  --color-brand-teal-700: 15 118 110;
+  --color-brand-teal-900: 19 78 74;
   /* Aowu 品牌粉（LOGO 字标色），供萌系点缀使用 */
   --color-brand-pink: 236 72 153;       /* #ec4899 pink-500 */
   --color-brand-pink-light: 244 114 182; /* #f472b6 pink-400 */
@@ -846,3 +877,120 @@
 [data-theme='aowu'] .sidebar-logo {
   filter: drop-shadow(0 0 10px rgb(var(--color-brand-pink-light) / 0.35));
 }
+
+/* ============================================================
+   Aowu 主题装饰色收敛：冷色系（blue/sky/cyan/indigo/violet/purple/fuchsia）
+   统一映射为品牌紫，emerald 绿收敛为品牌青（LOGO 声波色）。
+   语义色保留：green=成功、red/rose=危险、amber/yellow/orange=警告/暖点缀。
+   ============================================================ */
+[data-theme='aowu'] .bg-blue-100 { background-color: rgb(var(--color-primary-100)); }
+[data-theme='aowu'] .bg-blue-200 { background-color: rgb(var(--color-primary-200)); }
+[data-theme='aowu'] .bg-blue-50 { background-color: rgb(var(--color-primary-50)); }
+[data-theme='aowu'] .text-blue-500 { color: rgb(var(--color-primary-500)); }
+[data-theme='aowu'] .text-blue-600 { color: rgb(var(--color-primary-600)); }
+[data-theme='aowu'] .text-blue-700 { color: rgb(var(--color-primary-700)); }
+[data-theme='aowu'] .text-blue-900 { color: rgb(var(--color-primary-900)); }
+[data-theme='aowu'] .border-blue-200 { border-color: rgb(var(--color-primary-200)); }
+[data-theme='aowu'] .border-blue-500 { border-color: rgb(var(--color-primary-500)); }
+html.dark[data-theme='aowu'] .text-blue-300 { color: rgb(var(--color-primary-300)); }
+html.dark[data-theme='aowu'] .text-blue-400 { color: rgb(var(--color-primary-400)); }
+html.dark[data-theme='aowu'] .bg-blue-900\/20 { background-color: rgb(var(--color-primary-900) / 0.2); }
+html.dark[data-theme='aowu'] .bg-blue-900\/30 { background-color: rgb(var(--color-primary-900) / 0.3); }
+html.dark[data-theme='aowu'] .bg-blue-900 { background-color: rgb(var(--color-primary-900)); }
+html.dark[data-theme='aowu'] .border-blue-700 { border-color: rgb(var(--color-primary-700)); }
+[data-theme='aowu'] .bg-sky-100 { background-color: rgb(var(--color-primary-100)); }
+[data-theme='aowu'] .bg-sky-200 { background-color: rgb(var(--color-primary-200)); }
+[data-theme='aowu'] .bg-sky-50 { background-color: rgb(var(--color-primary-50)); }
+[data-theme='aowu'] .text-sky-500 { color: rgb(var(--color-primary-500)); }
+[data-theme='aowu'] .text-sky-600 { color: rgb(var(--color-primary-600)); }
+[data-theme='aowu'] .text-sky-700 { color: rgb(var(--color-primary-700)); }
+[data-theme='aowu'] .text-sky-900 { color: rgb(var(--color-primary-900)); }
+[data-theme='aowu'] .border-sky-200 { border-color: rgb(var(--color-primary-200)); }
+[data-theme='aowu'] .border-sky-500 { border-color: rgb(var(--color-primary-500)); }
+html.dark[data-theme='aowu'] .text-sky-300 { color: rgb(var(--color-primary-300)); }
+html.dark[data-theme='aowu'] .text-sky-400 { color: rgb(var(--color-primary-400)); }
+html.dark[data-theme='aowu'] .bg-sky-900\/20 { background-color: rgb(var(--color-primary-900) / 0.2); }
+html.dark[data-theme='aowu'] .bg-sky-900\/30 { background-color: rgb(var(--color-primary-900) / 0.3); }
+html.dark[data-theme='aowu'] .bg-sky-900 { background-color: rgb(var(--color-primary-900)); }
+html.dark[data-theme='aowu'] .border-sky-700 { border-color: rgb(var(--color-primary-700)); }
+[data-theme='aowu'] .bg-cyan-100 { background-color: rgb(var(--color-primary-100)); }
+[data-theme='aowu'] .bg-cyan-200 { background-color: rgb(var(--color-primary-200)); }
+[data-theme='aowu'] .bg-cyan-50 { background-color: rgb(var(--color-primary-50)); }
+[data-theme='aowu'] .text-cyan-500 { color: rgb(var(--color-primary-500)); }
+[data-theme='aowu'] .text-cyan-600 { color: rgb(var(--color-primary-600)); }
+[data-theme='aowu'] .text-cyan-700 { color: rgb(var(--color-primary-700)); }
+[data-theme='aowu'] .text-cyan-900 { color: rgb(var(--color-primary-900)); }
+[data-theme='aowu'] .border-cyan-200 { border-color: rgb(var(--color-primary-200)); }
+[data-theme='aowu'] .border-cyan-500 { border-color: rgb(var(--color-primary-500)); }
+html.dark[data-theme='aowu'] .text-cyan-300 { color: rgb(var(--color-primary-300)); }
+html.dark[data-theme='aowu'] .text-cyan-400 { color: rgb(var(--color-primary-400)); }
+html.dark[data-theme='aowu'] .bg-cyan-900\/20 { background-color: rgb(var(--color-primary-900) / 0.2); }
+html.dark[data-theme='aowu'] .bg-cyan-900\/30 { background-color: rgb(var(--color-primary-900) / 0.3); }
+html.dark[data-theme='aowu'] .bg-cyan-900 { background-color: rgb(var(--color-primary-900)); }
+html.dark[data-theme='aowu'] .border-cyan-700 { border-color: rgb(var(--color-primary-700)); }
+[data-theme='aowu'] .bg-indigo-100 { background-color: rgb(var(--color-primary-100)); }
+[data-theme='aowu'] .bg-indigo-200 { background-color: rgb(var(--color-primary-200)); }
+[data-theme='aowu'] .bg-indigo-50 { background-color: rgb(var(--color-primary-50)); }
+[data-theme='aowu'] .text-indigo-500 { color: rgb(var(--color-primary-500)); }
+[data-theme='aowu'] .text-indigo-600 { color: rgb(var(--color-primary-600)); }
+[data-theme='aowu'] .text-indigo-700 { color: rgb(var(--color-primary-700)); }
+[data-theme='aowu'] .text-indigo-900 { color: rgb(var(--color-primary-900)); }
+[data-theme='aowu'] .border-indigo-200 { border-color: rgb(var(--color-primary-200)); }
+[data-theme='aowu'] .border-indigo-500 { border-color: rgb(var(--color-primary-500)); }
+html.dark[data-theme='aowu'] .text-indigo-300 { color: rgb(var(--color-primary-300)); }
+html.dark[data-theme='aowu'] .text-indigo-400 { color: rgb(var(--color-primary-400)); }
+html.dark[data-theme='aowu'] .bg-indigo-900\/20 { background-color: rgb(var(--color-primary-900) / 0.2); }
+html.dark[data-theme='aowu'] .bg-indigo-900\/30 { background-color: rgb(var(--color-primary-900) / 0.3); }
+html.dark[data-theme='aowu'] .bg-indigo-900 { background-color: rgb(var(--color-primary-900)); }
+html.dark[data-theme='aowu'] .border-indigo-700 { border-color: rgb(var(--color-primary-700)); }
+[data-theme='aowu'] .bg-violet-100 { background-color: rgb(var(--color-primary-100)); }
+[data-theme='aowu'] .bg-violet-200 { background-color: rgb(var(--color-primary-200)); }
+[data-theme='aowu'] .bg-violet-50 { background-color: rgb(var(--color-primary-50)); }
+[data-theme='aowu'] .text-violet-500 { color: rgb(var(--color-primary-500)); }
+[data-theme='aowu'] .text-violet-600 { color: rgb(var(--color-primary-600)); }
+[data-theme='aowu'] .text-violet-700 { color: rgb(var(--color-primary-700)); }
+[data-theme='aowu'] .text-violet-900 { color: rgb(var(--color-primary-900)); }
+[data-theme='aowu'] .border-violet-200 { border-color: rgb(var(--color-primary-200)); }
+[data-theme='aowu'] .border-violet-500 { border-color: rgb(var(--color-primary-500)); }
+html.dark[data-theme='aowu'] .text-violet-300 { color: rgb(var(--color-primary-300)); }
+html.dark[data-theme='aowu'] .text-violet-400 { color: rgb(var(--color-primary-400)); }
+html.dark[data-theme='aowu'] .bg-violet-900\/20 { background-color: rgb(var(--color-primary-900) / 0.2); }
+html.dark[data-theme='aowu'] .bg-violet-900\/30 { background-color: rgb(var(--color-primary-900) / 0.3); }
+html.dark[data-theme='aowu'] .bg-violet-900 { background-color: rgb(var(--color-primary-900)); }
+html.dark[data-theme='aowu'] .border-violet-700 { border-color: rgb(var(--color-primary-700)); }
+[data-theme='aowu'] .bg-purple-100 { background-color: rgb(var(--color-primary-100)); }
+[data-theme='aowu'] .bg-purple-200 { background-color: rgb(var(--color-primary-200)); }
+[data-theme='aowu'] .bg-purple-50 { background-color: rgb(var(--color-primary-50)); }
+[data-theme='aowu'] .text-purple-500 { color: rgb(var(--color-primary-500)); }
+[data-theme='aowu'] .text-purple-600 { color: rgb(var(--color-primary-600)); }
+[data-theme='aowu'] .text-purple-700 { color: rgb(var(--color-primary-700)); }
+[data-theme='aowu'] .text-purple-900 { color: rgb(var(--color-primary-900)); }
+[data-theme='aowu'] .border-purple-200 { border-color: rgb(var(--color-primary-200)); }
+[data-theme='aowu'] .border-purple-500 { border-color: rgb(var(--color-primary-500)); }
+html.dark[data-theme='aowu'] .text-purple-300 { color: rgb(var(--color-primary-300)); }
+html.dark[data-theme='aowu'] .text-purple-400 { color: rgb(var(--color-primary-400)); }
+html.dark[data-theme='aowu'] .bg-purple-900\/20 { background-color: rgb(var(--color-primary-900) / 0.2); }
+html.dark[data-theme='aowu'] .bg-purple-900\/30 { background-color: rgb(var(--color-primary-900) / 0.3); }
+html.dark[data-theme='aowu'] .bg-purple-900 { background-color: rgb(var(--color-primary-900)); }
+html.dark[data-theme='aowu'] .border-purple-700 { border-color: rgb(var(--color-primary-700)); }
+[data-theme='aowu'] .bg-fuchsia-100 { background-color: rgb(var(--color-primary-100)); }
+[data-theme='aowu'] .bg-fuchsia-200 { background-color: rgb(var(--color-primary-200)); }
+[data-theme='aowu'] .bg-fuchsia-50 { background-color: rgb(var(--color-primary-50)); }
+[data-theme='aowu'] .text-fuchsia-500 { color: rgb(var(--color-primary-500)); }
+[data-theme='aowu'] .text-fuchsia-600 { color: rgb(var(--color-primary-600)); }
+[data-theme='aowu'] .text-fuchsia-700 { color: rgb(var(--color-primary-700)); }
+[data-theme='aowu'] .text-fuchsia-900 { color: rgb(var(--color-primary-900)); }
+[data-theme='aowu'] .border-fuchsia-200 { border-color: rgb(var(--color-primary-200)); }
+[data-theme='aowu'] .border-fuchsia-500 { border-color: rgb(var(--color-primary-500)); }
+html.dark[data-theme='aowu'] .text-fuchsia-300 { color: rgb(var(--color-primary-300)); }
+html.dark[data-theme='aowu'] .text-fuchsia-400 { color: rgb(var(--color-primary-400)); }
+html.dark[data-theme='aowu'] .bg-fuchsia-900\/20 { background-color: rgb(var(--color-primary-900) / 0.2); }
+html.dark[data-theme='aowu'] .bg-fuchsia-900\/30 { background-color: rgb(var(--color-primary-900) / 0.3); }
+html.dark[data-theme='aowu'] .bg-fuchsia-900 { background-color: rgb(var(--color-primary-900)); }
+html.dark[data-theme='aowu'] .border-fuchsia-700 { border-color: rgb(var(--color-primary-700)); }
+[data-theme='aowu'] .bg-emerald-100 { background-color: rgb(var(--color-brand-teal-100)); }
+[data-theme='aowu'] .bg-emerald-200 { background-color: rgb(var(--color-brand-teal-200)); }
+[data-theme='aowu'] .text-emerald-600 { color: rgb(var(--color-brand-teal-600)); }
+[data-theme='aowu'] .text-emerald-700 { color: rgb(var(--color-brand-teal-700)); }
+html.dark[data-theme='aowu'] .text-emerald-400 { color: rgb(var(--color-brand-teal-400)); }
+html.dark[data-theme='aowu'] .bg-emerald-900\/30 { background-color: rgb(var(--color-brand-teal-900) / 0.3); }

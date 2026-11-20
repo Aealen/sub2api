@@ -192,6 +192,8 @@ export default {
     lightMode: '浅色模式',
     darkMode: '深色模式',
     brandTheme: "主题色",
+    appearance: "外观",
+    appearanceMode: "外观模式",
     brandThemeTeal: "经典青",
     brandThemeAowu: "Aowu 紫",
     collapse: '收起',
