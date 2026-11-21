@@ -2169,65 +2169,6 @@
           </button>
         </div>
         </template>
-        <!-- 组内账号与调度优先级（account_groups.priority） -->
-        <div
-          class="border-t border-gray-100 pt-4 dark:border-dark-600"
-          data-testid="group-accounts-section"
-        >
-          <div class="mb-3 flex items-center justify-between gap-3">
-            <div class="min-w-0">
-              <label class="input-label mb-0">{{ t("admin.groups.accountsSection.title") }}</label>
-              <p class="input-hint mb-0">{{ t("admin.groups.accountsSection.hint") }}</p>
-            </div>
-            <button
-              type="button"
-              class="btn btn-secondary shrink-0"
-              :disabled="groupAccountsSaving || groupAccountsChangedCount === 0"
-              data-testid="group-accounts-save"
-              @click="saveGroupAccountPriorities"
-            >
-              {{ groupAccountsSaving ? t("admin.groups.accountsSection.saving") : t("admin.groups.accountsSection.save") }}
-            </button>
-          </div>
-          <div v-if="groupAccountsLoading" class="flex items-center justify-center py-6">
-            <div class="h-6 w-6 animate-spin rounded-full border-b-2 border-primary-500"></div>
-          </div>
-          <p v-else-if="groupAccounts.length === 0" class="text-sm text-gray-500 dark:text-dark-400">
-            {{ t("admin.groups.accountsSection.empty") }}
-          </p>
-          <div v-else class="space-y-2">
-            <div
-              v-for="acc in groupAccounts"
-              :key="acc.account_id"
-              class="flex items-center justify-between gap-3 rounded-xl border border-gray-100 px-3 py-2 dark:border-dark-600"
-            >
-              <div class="flex min-w-0 flex-wrap items-center gap-2">
-                <span class="truncate text-sm font-medium text-gray-900 dark:text-white">{{ acc.name }}</span>
-                <span
-                  class="shrink-0 rounded-md bg-gray-100 px-1.5 py-0.5 text-[11px] uppercase text-gray-500 dark:bg-dark-700 dark:text-dark-400"
-                >{{ acc.platform }}</span>
-                <span
-                  class="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium"
-                  :class="acc.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-500 dark:bg-dark-700 dark:text-dark-400'"
-                >{{ acc.status === "active" ? t("admin.groups.accountsSection.statusActive") : t("admin.groups.accountsSection.statusInactive") }}</span>
-                <span
-                  v-if="!acc.schedulable"
-                  class="shrink-0 rounded-md bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                >{{ t("admin.groups.accountsSection.paused") }}</span>
-              </div>
-              <div class="flex shrink-0 items-center gap-2">
-                <label class="text-xs text-gray-400 dark:text-dark-500">{{ t("admin.groups.accountsSection.priorityLabel") }}</label>
-                <input
-                  v-model.number="acc.priority"
-                  type="number"
-                  min="1"
-                  step="1"
-                  class="input w-20 py-1.5 text-center font-mono text-sm"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
       </form>
 
       <template #footer>
@@ -3994,6 +3935,65 @@
           </button>
         </div>
         </template>
+        <!-- 组内账号与调度优先级（account_groups.priority） -->
+        <div
+          class="border-t border-gray-100 pt-4 dark:border-dark-600"
+          data-testid="group-accounts-section"
+        >
+          <div class="mb-3 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <label class="input-label mb-0">{{ t("admin.groups.accountsSection.title") }}</label>
+              <p class="input-hint mb-0">{{ t("admin.groups.accountsSection.hint") }}</p>
+            </div>
+            <button
+              type="button"
+              class="btn btn-secondary shrink-0"
+              :disabled="groupAccountsSaving || groupAccountsChangedCount === 0"
+              data-testid="group-accounts-save"
+              @click="saveGroupAccountPriorities"
+            >
+              {{ groupAccountsSaving ? t("admin.groups.accountsSection.saving") : t("admin.groups.accountsSection.save") }}
+            </button>
+          </div>
+          <div v-if="groupAccountsLoading" class="flex items-center justify-center py-6">
+            <div class="h-6 w-6 animate-spin rounded-full border-b-2 border-primary-500"></div>
+          </div>
+          <p v-else-if="groupAccounts.length === 0" class="text-sm text-gray-500 dark:text-dark-400">
+            {{ t("admin.groups.accountsSection.empty") }}
+          </p>
+          <div v-else class="space-y-2">
+            <div
+              v-for="acc in groupAccounts"
+              :key="acc.account_id"
+              class="flex items-center justify-between gap-3 rounded-xl border border-gray-100 px-3 py-2 dark:border-dark-600"
+            >
+              <div class="flex min-w-0 flex-wrap items-center gap-2">
+                <span class="truncate text-sm font-medium text-gray-900 dark:text-white">{{ acc.name }}</span>
+                <span
+                  class="shrink-0 rounded-md bg-gray-100 px-1.5 py-0.5 text-[11px] uppercase text-gray-500 dark:bg-dark-700 dark:text-dark-400"
+                >{{ acc.platform }}</span>
+                <span
+                  class="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium"
+                  :class="acc.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-500 dark:bg-dark-700 dark:text-dark-400'"
+                >{{ acc.status === "active" ? t("admin.groups.accountsSection.statusActive") : t("admin.groups.accountsSection.statusInactive") }}</span>
+                <span
+                  v-if="!acc.schedulable"
+                  class="shrink-0 rounded-md bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                >{{ t("admin.groups.accountsSection.paused") }}</span>
+              </div>
+              <div class="flex shrink-0 items-center gap-2">
+                <label class="text-xs text-gray-400 dark:text-dark-500">{{ t("admin.groups.accountsSection.priorityLabel") }}</label>
+                <input
+                  v-model.number="acc.priority"
+                  type="number"
+                  min="1"
+                  step="1"
+                  class="input w-20 py-1.5 text-center font-mono text-sm"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </form>
 
       <template #footer>
