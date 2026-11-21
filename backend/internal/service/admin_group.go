@@ -1501,6 +1501,24 @@ func (s *adminServiceImpl) GetGroupAPIKeys(ctx context.Context, groupID int64, p
 	return keys, result.Total, nil
 }
 
+// ListGroupAccountsWithPriority 列出分组内账号及其调度优先级。
+func (s *adminServiceImpl) ListGroupAccountsWithPriority(ctx context.Context, groupID int64) ([]GroupAccountWithPriority, error) {
+	return s.groupRepo.ListAccountsByGroupWithPriority(ctx, groupID)
+}
+
+// UpdateGroupAccountPriorities 批量更新账号在指定分组内的调度优先级。
+func (s *adminServiceImpl) UpdateGroupAccountPriorities(ctx context.Context, groupID int64, updates []AccountGroupPriorityUpdate) error {
+	if len(updates) == 0 {
+		return nil
+	}
+	for _, u := range updates {
+		if u.Priority < 1 {
+			return infraerrors.BadRequest("INVALID_GROUP_ACCOUNT_PRIORITY", "priority must be >= 1")
+		}
+	}
+	return s.groupRepo.UpdateAccountGroupPriorities(ctx, groupID, updates)
+}
+
 func (s *adminServiceImpl) GetGroupRateMultipliers(ctx context.Context, groupID int64) ([]UserGroupRateEntry, error) {
 	if err := s.ValidateSimpleModeGroupOperation(AdminGroupOperationMultiplier); err != nil {
 		return nil, err

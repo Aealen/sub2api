@@ -413,6 +413,14 @@ func (s *stubAdminService) GetGroupAPIKeys(ctx context.Context, groupID int64, p
 	return s.apiKeys, int64(len(s.apiKeys)), nil
 }
 
+func (s *stubAdminService) ListGroupAccountsWithPriority(_ context.Context, _ int64) ([]service.GroupAccountWithPriority, error) {
+	return nil, nil
+}
+
+func (s *stubAdminService) UpdateGroupAccountPriorities(_ context.Context, _ int64, _ []service.AccountGroupPriorityUpdate) error {
+	return nil
+}
+
 func (s *stubAdminService) GetGroupRateMultipliers(_ context.Context, _ int64) ([]service.UserGroupRateEntry, error) {
 	return nil, nil
 }

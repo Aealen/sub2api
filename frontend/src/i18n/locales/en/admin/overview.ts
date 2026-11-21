@@ -914,6 +914,21 @@ export default {
         privacySetOnlyEnabled: 'Enabled — accounts with unset Privacy will be excluded',
         disabled: 'Disabled'
       },
+      accountsSection: {
+        title: 'Accounts & Scheduling Priority',
+        hint: 'Lower numbers run first within the group: the highest-priority layer serves until saturated, then requests fail over to the next tier.',
+        save: 'Save priorities',
+        saving: 'Saving…',
+        empty: 'No accounts bound to this group (bind accounts in Account Management)',
+        loadFailed: 'Failed to load group accounts',
+        statusActive: 'Active',
+        statusInactive: 'Disabled',
+        paused: 'Paused',
+        priorityLabel: 'Priority',
+        saveSuccess: 'Group account priorities updated',
+        saveFailed: 'Failed to update group account priorities',
+        noChanges: 'No priority changes'
+      },
       form: {
         name: 'Name',
         description: 'Description',

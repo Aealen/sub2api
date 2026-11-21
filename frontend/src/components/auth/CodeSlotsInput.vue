@@ -265,40 +265,28 @@ defineExpose({
   justify-content: center;
   overflow: hidden;
   background: rgb(var(--color-gray-100));
-  border: 1.5px solid rgb(var(--color-gray-200));
+  border: 1.5px solid rgb(var(--color-gray-300));
   transition:
     border-color 0.2s ease,
     background 0.2s ease,
     transform 0.2s ease;
 }
 
-:global(.dark) .cs-slot {
-  background: rgb(var(--color-dark-700));
-  border-color: rgb(var(--color-dark-600));
-}
-
+/* active 格全主题统一：半透明主色底（不用 primary-50 浅色底，避免深色下白格白字） */
 .cs-slot-active {
   border-color: rgb(var(--color-primary-500));
   box-shadow: 0 0 0 3px rgb(var(--color-primary-500) / 0.18);
-  background: rgb(var(--color-primary-50));
+  background: rgb(var(--color-primary-500) / 0.1);
 }
 
-:global(.dark) .cs-slot-active {
-  background: rgb(var(--color-primary-500) / 0.12);
-}
-
-.cs-slot-success {
-  border-color: transparent;
-}
-
-/* 成功色块以 clip-path 洗入（级联延迟由内联 animationDelay 提供） */
-.cs-slot-success::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgb(var(--color-emerald-500));
-  clip-path: inset(50% 0 50% 0);
-  animation: cs-wash 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+.cs-digit {
+  position: relative;
+  z-index: 1;
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  color: rgb(var(--color-gray-900));
+  animation: cs-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .cs-digit {
@@ -446,5 +434,23 @@ defineExpose({
   .cs-slot-success::before {
     clip-path: inset(0 0 0 0);
   }
+}
+</style>
+
+<!-- 深色覆盖：非 scoped（Vue scoped 编译器会静默丢弃 `:global(.dark) .local` 混合写法）；
+     cs- 前缀为组件专属类名，全局作用无冲突风险 -->
+<style>
+.dark .cs-slot {
+  background: rgb(var(--color-dark-800));
+  border-color: rgb(var(--color-dark-600));
+}
+
+.dark .cs-slot-active {
+  border-color: rgb(var(--color-primary-400));
+  background: rgb(var(--color-primary-500) / 0.16);
+}
+
+.dark .cs-digit {
+  color: #fff;
 }
 </style>

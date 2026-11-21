@@ -2169,6 +2169,65 @@
           </button>
         </div>
         </template>
+        <!-- 组内账号与调度优先级（account_groups.priority） -->
+        <div
+          class="border-t border-gray-100 pt-4 dark:border-dark-600"
+          data-testid="group-accounts-section"
+        >
+          <div class="mb-3 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <label class="input-label mb-0">{{ t("admin.groups.accountsSection.title") }}</label>
+              <p class="input-hint mb-0">{{ t("admin.groups.accountsSection.hint") }}</p>
+            </div>
+            <button
+              type="button"
+              class="btn btn-secondary shrink-0"
+              :disabled="groupAccountsSaving || groupAccountsChangedCount === 0"
+              data-testid="group-accounts-save"
+              @click="saveGroupAccountPriorities"
+            >
+              {{ groupAccountsSaving ? t("admin.groups.accountsSection.saving") : t("admin.groups.accountsSection.save") }}
+            </button>
+          </div>
+          <div v-if="groupAccountsLoading" class="flex items-center justify-center py-6">
+            <div class="h-6 w-6 animate-spin rounded-full border-b-2 border-primary-500"></div>
+          </div>
+          <p v-else-if="groupAccounts.length === 0" class="text-sm text-gray-500 dark:text-dark-400">
+            {{ t("admin.groups.accountsSection.empty") }}
+          </p>
+          <div v-else class="space-y-2">
+            <div
+              v-for="acc in groupAccounts"
+              :key="acc.account_id"
+              class="flex items-center justify-between gap-3 rounded-xl border border-gray-100 px-3 py-2 dark:border-dark-600"
+            >
+              <div class="flex min-w-0 flex-wrap items-center gap-2">
+                <span class="truncate text-sm font-medium text-gray-900 dark:text-white">{{ acc.name }}</span>
+                <span
+                  class="shrink-0 rounded-md bg-gray-100 px-1.5 py-0.5 text-[11px] uppercase text-gray-500 dark:bg-dark-700 dark:text-dark-400"
+                >{{ acc.platform }}</span>
+                <span
+                  class="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium"
+                  :class="acc.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-500 dark:bg-dark-700 dark:text-dark-400'"
+                >{{ acc.status === "active" ? t("admin.groups.accountsSection.statusActive") : t("admin.groups.accountsSection.statusInactive") }}</span>
+                <span
+                  v-if="!acc.schedulable"
+                  class="shrink-0 rounded-md bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                >{{ t("admin.groups.accountsSection.paused") }}</span>
+              </div>
+              <div class="flex shrink-0 items-center gap-2">
+                <label class="text-xs text-gray-400 dark:text-dark-500">{{ t("admin.groups.accountsSection.priorityLabel") }}</label>
+                <input
+                  v-model.number="acc.priority"
+                  type="number"
+                  min="1"
+                  step="1"
+                  class="input w-20 py-1.5 text-center font-mono text-sm"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </form>
 
       <template #footer>
@@ -4482,6 +4541,11 @@ import { useAppStore } from "@/stores/app";
 import { useAuthStore } from "@/stores/auth";
 import { useOnboardingStore } from "@/stores/onboarding";
 import { adminAPI } from "@/api/admin";
+import {
+  getGroupAccounts,
+  updateGroupAccountPriorities,
+  type GroupAccountWithPriority,
+} from "@/api/admin/groups";
 import type {
   AdminGroup,
   CodexModelsManifestConfig,
@@ -5064,6 +5128,54 @@ let abortController: AbortController | null = null;
 
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
+
+// ==================== 组内账号与调度优先级 ====================
+const groupAccounts = ref<GroupAccountWithPriority[]>([]);
+const groupAccountsLoading = ref(false);
+const groupAccountsSaving = ref(false);
+const groupAccountsPrioritySnapshot = ref<Record<number, number>>({});
+
+const groupAccountsChangedCount = computed(
+  () =>
+    groupAccounts.value.filter(
+      (acc) => groupAccountsPrioritySnapshot.value[acc.account_id] !== acc.priority,
+    ).length,
+);
+
+const loadGroupAccounts = async (groupId: number) => {
+  groupAccountsLoading.value = true;
+  try {
+    const items = await getGroupAccounts(groupId);
+    groupAccounts.value = items;
+    const snapshot: Record<number, number> = {};
+    items.forEach((item) => {
+      snapshot[item.account_id] = item.priority;
+    });
+    groupAccountsPrioritySnapshot.value = snapshot;
+  } catch {
+    appStore.showError(t("admin.groups.accountsSection.loadFailed"));
+  } finally {
+    groupAccountsLoading.value = false;
+  }
+};
+
+const saveGroupAccountPriorities = async () => {
+  const groupId = editingGroup.value?.id;
+  if (!groupId || groupAccountsChangedCount.value === 0) return;
+  const changed = groupAccounts.value
+    .filter((acc) => groupAccountsPrioritySnapshot.value[acc.account_id] !== acc.priority)
+    .map((acc) => ({ account_id: acc.account_id, priority: acc.priority }));
+  groupAccountsSaving.value = true;
+  try {
+    await updateGroupAccountPriorities(groupId, changed);
+    appStore.showSuccess(t("admin.groups.accountsSection.saveSuccess"));
+    await loadGroupAccounts(groupId);
+  } catch {
+    appStore.showError(t("admin.groups.accountsSection.saveFailed"));
+  } finally {
+    groupAccountsSaving.value = false;
+  }
+};
 const showDeleteDialog = ref(false);
 const showCompositeRouteDeleteDialog = ref(false);
 const pendingLiveForm = ref<"create" | "edit" | null>(null);
@@ -6522,6 +6634,7 @@ editForm.max_reasoning_effort = normalizeReasoningEffortForPlatform(
   );
   loadModelAllowlistCandidates("edit", group.id, group.platform);
   showEditModal.value = true;
+  loadGroupAccounts(group.id);
 };
 
 const closeEditModal = () => {
@@ -6530,6 +6643,7 @@ const closeEditModal = () => {
   });
   clearAllAccountSearchState();
   showEditModal.value = false;
+  groupAccounts.value = [];
   editingGroup.value = null;
   editForm.max_reasoning_effort = "";
   editForm.max_reasoning_effort_over_limit = reasoningEffortOverLimitDowngrade;
