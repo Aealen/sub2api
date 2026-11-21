@@ -39,6 +39,14 @@
             >
               <Icon name="refresh" size="md" :class="loading ? 'animate-spin' : ''" />
             </button>
+            <button
+              @click="pricingOverrideVisible = true"
+              :disabled="loading"
+              class="btn btn-secondary"
+              :title="t('admin.channels.pricingOverride.title', '定价覆盖文件')"
+            >
+              <Icon name="edit" size="md" />
+            </button>
             <button @click="openCreateDialog" class="btn btn-primary">
               <Icon name="plus" size="md" class="mr-2" />
               {{ t('admin.channels.createChannel', 'Create Channel') }}
@@ -633,6 +641,10 @@
       @cancel="showDeleteDialog = false"
     />
   </AppLayout>
+
+
+  <!-- 定价覆盖文件编辑（官方价目录，人民币口径） -->
+  <PricingOverrideDialog v-model:visible="pricingOverrideVisible" />
 </template>
 
 <script setup lang="ts">
@@ -641,6 +653,7 @@ import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { extractApiErrorMessage } from '@/utils/apiError'
 import { adminAPI } from '@/api/admin'
+import PricingOverrideDialog from '@/components/admin/PricingOverrideDialog.vue'
 import type { Channel, ChannelModelPricing, CreateChannelRequest, UpdateChannelRequest, AccountStatsPricingRule } from '@/api/admin/channels'
 import type { PricingFormEntry } from '@/components/admin/channel/types'
 import { apiIntervalsToForm, apiTimePricingToForm, createDefaultTimePricingForm, findModelConflict, formIntervalsToAPI, formReasoningEffortMultipliersToAPI, formTimePricingToAPI, isValidPositiveMultiplier, mTokToPerToken, perTokenToMTok, validateIntervals, validateReasoningEffortMultipliers, validateTimePricing } from '@/components/admin/channel/types'
@@ -1438,6 +1451,8 @@ function resetForm() {
   clearAllRuleAccountSearchState()
   ruleAccountNameCache.value = {}
 }
+
+const pricingOverrideVisible = ref(false)
 
 async function openCreateDialog() {
   editingChannel.value = null

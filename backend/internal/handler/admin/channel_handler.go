@@ -677,3 +677,49 @@ func (h *ChannelHandler) SyncPricingModels(c *gin.Context) {
 	models := h.pricingService.ListModelNamesByProvider(provider)
 	response.Success(c, gin.H{"models": models})
 }
+
+// --- Pricing override file management ---
+// 覆盖定价文件（官方价目录的人民币口径中枢）：页面编辑入口的读写端点。
+
+type PricingOverrideResponse struct {
+	Configured bool   `json:"configured"`
+	Path       string `json:"path"`
+	Content    string `json:"content"`
+}
+
+type UpdatePricingOverrideRequest struct {
+	Content string `json:"content" binding:"required"`
+}
+
+// GetPricingOverride 读取覆盖定价文件当前内容。
+// GET /api/v1/admin/channels/pricing-override
+func (h *ChannelHandler) GetPricingOverride(c *gin.Context) {
+	configured, path, content, err := h.pricingService.GetPricingOverrideContent()
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, PricingOverrideResponse{Configured: configured, Path: path, Content: content})
+}
+
+// UpdatePricingOverride 校验并写入覆盖定价文件，写入成功后立即触发热加载。
+// 热加载失败不视为失败（文件已落盘，周期检测兜底），以 warning 语义返回。
+// PUT /api/v1/admin/channels/pricing-override
+func (h *ChannelHandler) UpdatePricingOverride(c *gin.Context) {
+	var req UpdatePricingOverrideRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request: "+err.Error())
+		return
+	}
+	reloadErr, err := h.pricingService.UpdatePricingOverrideContent(req.Content)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	result := gin.H{"saved": true, "reloaded": true}
+	if reloadErr != nil {
+		result["reloaded"] = false
+		result["warning"] = reloadErr.Error()
+	}
+	response.Success(c, result)
+}

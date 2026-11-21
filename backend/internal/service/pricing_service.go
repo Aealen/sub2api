@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"maps"
+	"errors"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -20,6 +21,7 @@ import (
 
 	"github.com/Wei-Shaw/sub2api/internal/config"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/claude"
+	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/logger"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/openai"
 	"github.com/Wei-Shaw/sub2api/internal/util/urlvalidator"
@@ -1920,4 +1922,67 @@ func isNumeric(s string) bool {
 		}
 	}
 	return true
+}
+
+// ReloadCustomPricingNow 供管理端在覆盖定价文件变更后立即生效（绕过周期检测）。
+func (s *PricingService) ReloadCustomPricingNow() error {
+	if s == nil {
+		return errors.New("pricing service is nil")
+	}
+	return s.reloadCustomPricingLayers()
+}
+
+// GetPricingOverrideContent 返回覆盖定价文件的配置状态与当前内容。
+// 未配置路径时 configured=false；路径已配置但文件尚未创建时内容为空串。
+func (s *PricingService) GetPricingOverrideContent() (configured bool, path string, content string, err error) {
+	if s == nil || s.cfg == nil {
+		return false, "", "", errors.New("pricing service is nil")
+	}
+	path = strings.TrimSpace(s.cfg.Pricing.OverrideFile)
+	if path == "" {
+		return false, "", "", nil
+	}
+	body, readErr := os.ReadFile(path)
+	if readErr != nil {
+		if os.IsNotExist(readErr) {
+			return true, path, "", nil
+		}
+		return true, path, "", fmt.Errorf("read pricing override file: %w", readErr)
+	}
+	return true, path, string(body), nil
+}
+
+// UpdatePricingOverrideContent 校验并写入覆盖定价文件，随后立即触发热加载。
+// 写入前将旧内容备份为 <path>.bak（存在时）；热加载失败不回滚写入——文件已落盘，
+// 周期检测（默认 10 分钟）会兜底重载，仅向调用方返回告警语义。
+func (s *PricingService) UpdatePricingOverrideContent(content string) (reloadErr error, err error) {
+	if s == nil || s.cfg == nil {
+		return nil, errors.New("pricing service is nil")
+	}
+	path := strings.TrimSpace(s.cfg.Pricing.OverrideFile)
+	if path == "" {
+		return nil, infraerrors.BadRequest("PRICING_OVERRIDE_NOT_CONFIGURED", "pricing override file path is not configured")
+	}
+	trimmed := strings.TrimSpace(content)
+	if trimmed == "" {
+		return nil, infraerrors.BadRequest("PRICING_OVERRIDE_EMPTY", "pricing override content is empty")
+	}
+	var entries map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(trimmed), &entries); err != nil {
+		return nil, infraerrors.BadRequest("PRICING_OVERRIDE_INVALID_JSON", "pricing override content is not valid JSON: "+err.Error())
+	}
+	if len(entries) == 0 {
+		return nil, infraerrors.BadRequest("PRICING_OVERRIDE_EMPTY", "pricing override content must be a non-empty JSON object")
+	}
+
+	if old, readErr := os.ReadFile(path); readErr == nil && len(old) > 0 {
+		if bakErr := os.WriteFile(path+".bak", old, 0600); bakErr != nil {
+			logger.LegacyPrintf("service.pricing", "[Pricing] Warning: backup old override file failed: %v", bakErr)
+		}
+	}
+	if writeErr := os.WriteFile(path, []byte(trimmed+"\n"), 0644); writeErr != nil {
+		return nil, fmt.Errorf("write pricing override file: %w", writeErr)
+	}
+	// 热加载失败不算保存失败：文件已落盘，周期检测（默认 10 分钟）兜底重载
+	return s.ReloadCustomPricingNow(), nil
 }
