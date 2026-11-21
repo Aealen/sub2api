@@ -975,13 +975,7 @@ function validateForm(): boolean {
     isValid = false
   }
 
-  // Invitation code validation (required when enabled)
-  if (invitationCodeEnabled.value) {
-    if (!formData.invitation_code.trim()) {
-      errors.invitation_code = t('auth.invitationCodeRequired')
-      isValid = false
-    }
-  }
+  // Invitation code is optional: it is validated (and redeemed) only when provided.
 
   // Turnstile validation
   if (turnstileEnabled.value && !turnstileToken.value) {

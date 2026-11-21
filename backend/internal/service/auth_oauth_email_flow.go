@@ -68,7 +68,8 @@ func (s *AuthService) validateOAuthRegistrationInvitation(ctx context.Context, i
 
 	invitationCode = strings.TrimSpace(invitationCode)
 	if invitationCode == "" {
-		return nil, ErrInvitationCodeRequired
+		// 邀请码可选填写：留空允许注册
+		return nil, nil
 	}
 
 	redeemCode, err := s.loadOAuthRegistrationInvitation(ctx, invitationCode)

@@ -180,12 +180,9 @@ func (s *AuthService) RegisterWithVerification(ctx context.Context, email, passw
 	if isReservedEmail(email) {
 		return "", nil, ErrEmailReserved
 	}
-	// 检查是否需要邀请码
+	// 检查邀请码（可选填写：开启邀请码注册后，提供邀请码才校验并核销，留空允许注册）
 	var invitationRedeemCode *RedeemCode
-	if s.settingService != nil && s.settingService.IsInvitationCodeEnabled(ctx) {
-		if invitationCode == "" {
-			return "", nil, ErrInvitationCodeRequired
-		}
+	if s.settingService != nil && s.settingService.IsInvitationCodeEnabled(ctx) && invitationCode != "" {
 		// 验证邀请码
 		redeemCode, err := s.redeemRepo.GetByCode(ctx, invitationCode)
 		if err != nil {
@@ -730,12 +727,9 @@ func (s *AuthService) loginOrRegisterOAuthWithTokenPair(ctx context.Context, ema
 				return nil, nil, ErrRegDisabled
 			}
 
-			// 检查是否需要邀请码
+			// 检查邀请码（可选填写：开启邀请码注册后，提供邀请码才校验并核销，留空允许注册）
 			var invitationRedeemCode *RedeemCode
-			if s.settingService != nil && s.settingService.IsInvitationCodeEnabled(ctx) {
-				if invitationCode == "" {
-					return nil, nil, ErrOAuthInvitationRequired
-				}
+			if s.settingService != nil && s.settingService.IsInvitationCodeEnabled(ctx) && invitationCode != "" {
 				redeemCode, err := s.redeemRepo.GetByCode(ctx, invitationCode)
 				if err != nil {
 					return nil, nil, ErrInvitationCodeInvalid

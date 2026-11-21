@@ -311,7 +311,7 @@ export default {
     promoCodeAlreadyUsed: 'You have already used this promo code',
     promoCodeValidating: 'Promo code is being validated, please wait',
     promoCodeInvalidCannotRegister: 'Invalid promo code. Please check and try again or clear the promo code field',
-    invitationCodeLabel: 'Invitation Code',
+    invitationCodeLabel: 'Invitation Code (optional)',
     invitationCodePlaceholder: 'Enter invitation code',
     invitationCodeRequired: 'Invitation code is required',
     invitationCodeValid: 'Invitation code is valid',
