@@ -56,7 +56,7 @@ export default {
         title: 'Pricing Override File',
         notConfigured: 'Pricing override file path is not configured',
         notConfiguredHint: 'PRICING_OVERRIDE_FILE is not configured on the server, saving is unavailable. Ask ops to enable it via environment variable.',
-        hint: 'Edit the official-price catalog override (CNY-denominated). Format: { "model": { "input_cost_per_token": CNY-per-M × 0.000001, "output_cost_per_token": CNY-per-M × 0.000001, ... } }. Saving hot-reloads immediately (drives both Model Plaza official prices and billing base).',
+        hint: 'Edit the official-price catalog override (CNY-denominated). Format: LiteLLM JSON entries, one per model — input_cost_per_token (CNY per 1M input × 0.000001), output_cost_per_token (CNY per 1M output × 0.000001); image models also take mode:image and output_cost_per_image. Saving hot-reloads immediately (drives both Model Plaza official prices and billing base).',
         warning: '⚠️ This file is global and directly affects user billing amounts. Double-check values before saving.',
         save: 'Save & Apply',
         saving: 'Saving…',
@@ -65,7 +65,7 @@ export default {
         saveFailed: 'Save failed, please review the content',
         loadFailed: 'Failed to load current file content',
         jsonInvalid: 'Content is not valid JSON',
-        jsonObjectRequired: 'Content must be a JSON object (e.g. { "model": {...} })'
+        jsonObjectRequired: 'Content must be a JSON object: top-level keys are model names, values are LiteLLM price fields'
       },
       editChannel: 'Edit Channel',
       deleteChannel: 'Delete Channel',

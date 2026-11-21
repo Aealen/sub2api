@@ -207,17 +207,13 @@
               }}
             </p>
             <div class="space-y-3">
-              <input
-                v-model="totpCode"
-                data-testid="dingtalk-bind-login-totp"
-                type="text"
-                inputmode="numeric"
-                maxlength="6"
-                class="input w-full"
-                placeholder="123456"
-                :disabled="isSubmitting"
-                @keyup.enter="handleSubmitTotpChallenge"
-              />
+              <div class="flex justify-center">
+                <CodeSlotsInput
+                  v-model="totpCode"
+                  testid="dingtalk-bind-login-totp"
+                  :disabled="isSubmitting"
+                />
+              </div>
               <button
                 data-testid="dingtalk-bind-login-totp-submit"
                 class="btn btn-primary w-full"
@@ -242,6 +238,7 @@ import { AuthLayout } from '@/components/layout'
 import PendingOAuthCreateAccountForm, {
   type PendingOAuthCreateAccountPayload
 } from '@/components/auth/PendingOAuthCreateAccountForm.vue'
+import CodeSlotsInput from '@/components/auth/CodeSlotsInput.vue'
 import { apiClient } from '@/api/client'
 import { useAuthStore, useAppStore } from '@/stores'
 import {

@@ -282,6 +282,10 @@ export default {
     sessionExpiredDesc: 'Please go back to the registration page and start again.',
     verificationCode: 'Verification Code',
     verificationCodeHint: 'Enter the 6-digit code sent to your email',
+    codeslots: {
+      ariaLabel: 'One-time code',
+      progress: '{count} of {total} digits entered',
+    },
     sendingCode: 'Sending...',
     sendCode: 'Send code',
     clickToResend: 'Click to resend code',

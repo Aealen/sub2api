@@ -6,7 +6,8 @@
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
           {{ t('auth.verifyYourEmail') }}
         </h2>
-        <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
+        <div class="mx-auto mt-3 h-1 w-12 rounded-full bg-gradient-to-r from-primary-500 to-pink-500"></div>
+        <p class="mt-3 text-sm text-gray-500 dark:text-dark-400">
           {{ t('auth.sendCodeDesc') }}
           <span class="font-medium text-gray-700 dark:text-gray-300">{{ email }}</span>
         </p>
@@ -35,20 +36,20 @@
           <label for="code" class="input-label text-center">
             {{ t('auth.verificationCode') }}
           </label>
-          <input
-            id="code"
-            v-model="verifyCode"
-            type="text"
-            required
-            autocomplete="one-time-code"
-            inputmode="numeric"
-            maxlength="6"
-            :disabled="isLoading"
-            class="input py-3 text-center font-mono text-xl tracking-[0.5em]"
-            :class="{ 'input-error': errors.code }"
-            placeholder="000000"
-          />
-          <p class="input-hint text-center">{{ t('auth.verificationCodeHint') }}</p>
+          <div class="flex justify-center">
+            <CodeSlotsInput
+              ref="codeInputRef"
+              v-model="verifyCode"
+              v-model:status="codeStatus"
+              input-id="code"
+              testid="email-verify-code"
+              :disabled="isLoading"
+              autofocus
+              @drained="handleCodeDrained"
+            />
+          </div>
+          <p v-if="errors.code" class="mt-2 text-center text-xs text-red-500">{{ errors.code }}</p>
+          <p v-else class="input-hint text-center">{{ t('auth.verificationCodeHint') }}</p>
         </div>
 
         <!-- Code Status -->
@@ -184,6 +185,7 @@ import { useI18n } from 'vue-i18n'
 import { AuthLayout } from '@/components/layout'
 import Icon from '@/components/icons/Icon.vue'
 import TurnstileWidget from '@/components/CaptchaChallenge.vue'
+import CodeSlotsInput from '@/components/auth/CodeSlotsInput.vue'
 import { useAuthStore, useAppStore } from '@/stores'
 import {
   persistOAuthTokenContext,
@@ -222,6 +224,8 @@ const isSendingCode = ref<boolean>(false)
 const errorMessage = ref<string>('')
 const codeSent = ref<boolean>(false)
 const verifyCode = ref<string>('')
+const codeStatus = ref<'idle' | 'error' | 'success'>('idle')
+const codeInputRef = ref<InstanceType<typeof CodeSlotsInput> | null>(null)
 const countdown = ref<number>(0)
 let countdownTimer: ReturnType<typeof setInterval> | null = null
 
@@ -748,6 +752,12 @@ async function handleVerify(): Promise<void> {
     errorMessage.value = buildRegistrationErrorMessage(error, t('auth.verifyFailed'))
 
     appStore.showError(errorMessage.value)
+    // Wrong code: cascade-drain the slots then refocus.
+    if (verifyCode.value) {
+      codeStatus.value = 'error'
+    } else {
+      codeStatus.value = 'idle'
+    }
   } finally {
     initialTurnstileToken.value = ''
     initialTencentCaptchaRandstr.value = ''
@@ -764,6 +774,12 @@ function handleBack(): void {
 
   // Go back to registration
   router.push('/register')
+}
+
+// After the error cascade drain finishes, reset state and refocus.
+function handleCodeDrained(): void {
+  codeStatus.value = 'idle'
+  codeInputRef.value?.focus()
 }
 
 function buildEmailSuffixNotAllowedMessage(): string {

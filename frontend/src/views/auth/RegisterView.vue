@@ -6,7 +6,8 @@
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
           {{ t('auth.createAccount') }}
         </h2>
-        <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
+        <div class="mx-auto mt-3 h-1 w-12 rounded-full bg-gradient-to-r from-primary-500 to-pink-500"></div>
+        <p class="mt-3 text-sm text-gray-500 dark:text-dark-400">
           {{ t('auth.signUpToStart', { siteName }) }}
         </p>
       </div>

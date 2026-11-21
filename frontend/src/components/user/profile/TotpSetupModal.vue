@@ -26,15 +26,10 @@
             <div v-if="verificationMethod === 'email'" class="space-y-4">
               <div>
                 <label class="input-label">{{ t('profile.totp.emailCode') }}</label>
-                <div class="flex gap-2">
-                  <input
-                    v-model="verifyForm.emailCode"
-                    type="text"
-                    maxlength="6"
-                    inputmode="numeric"
-                    class="input flex-1"
-                    :placeholder="t('profile.totp.enterEmailCode')"
-                  />
+                <div class="flex justify-center">
+                  <CodeSlotsInput v-model="verifyForm.emailCode" data-testid="totp-setup-email-code" />
+                </div>
+                <div class="mt-3 flex justify-end">
                   <button
                     type="button"
                     class="btn btn-secondary whitespace-nowrap"
@@ -130,20 +125,14 @@
               <label class="input-label text-center block mb-3">
                 {{ t('profile.totp.enterCode') }}
               </label>
-              <div class="flex justify-center gap-2">
-                <input
-                  v-for="(_, index) in 6"
-                  :key="index"
-                  :ref="(el) => setInputRef(el, index)"
-                  :value="code[index]"
-                  type="text"
-                  maxlength="1"
-                  inputmode="numeric"
-                  pattern="[0-9]"
-                  class="h-12 w-10 rounded-lg border border-gray-300 text-center text-lg font-semibold focus:border-primary-500 focus:ring-primary-500 dark:border-dark-600 dark:bg-dark-700"
-                  @input="handleCodeInput($event, index)"
-                  @keydown="handleKeydown($event, index)"
-                  @paste="handlePaste"
+              <div class="flex justify-center">
+                <CodeSlotsInput
+                  ref="codeInputRef"
+                  v-model="code"
+                  v-model:status="codeStatus"
+                  data-testid="totp-setup-code"
+                  :disabled="verifying"
+                  @drained="handleDrained"
                 />
               </div>
             </div>
@@ -155,7 +144,7 @@
               <button
                 type="submit"
                 class="btn btn-primary"
-                :disabled="verifying || code.join('').length !== 6"
+                :disabled="verifying || code.length !== 6"
               >
                 {{ verifying ? t('common.verifying') : t('profile.totp.verify') }}
               </button>
@@ -175,6 +164,7 @@ import { totpAPI } from '@/api'
 import { extractApiErrorMessage } from '@/utils/apiError'
 import type { TotpSetupResponse } from '@/types'
 import QRCode from 'qrcode'
+import CodeSlotsInput from '@/components/auth/CodeSlotsInput.vue'
 
 const emit = defineEmits<{
   close: []
@@ -197,8 +187,9 @@ const cooldownTimer = ref<ReturnType<typeof setInterval> | null>(null)
 const setupLoading = ref(false)
 const setupData = ref<TotpSetupResponse | null>(null)
 const verifying = ref(false)
-const code = ref<string[]>(['', '', '', '', '', ''])
-const inputRefs = ref<(HTMLInputElement | null)[]>([])
+const code = ref('')
+const codeStatus = ref<'idle' | 'error' | 'success'>('idle')
+const codeInputRef = ref<InstanceType<typeof CodeSlotsInput> | null>(null)
 const qrCodeDataUrl = ref('')
 
 const stepDescription = computed(() => {
@@ -245,59 +236,11 @@ watch(
   { immediate: true }
 )
 
-const setInputRef = (el: any, index: number) => {
-  inputRefs.value[index] = el as HTMLInputElement | null
-}
-
-const handleCodeInput = (event: Event, index: number) => {
-  const input = event.target as HTMLInputElement
-  const value = input.value.replace(/[^0-9]/g, '')
-  code.value[index] = value
-
-  if (value && index < 5) {
-    nextTick(() => {
-      inputRefs.value[index + 1]?.focus()
-    })
-  }
-}
-
-const handleKeydown = (event: KeyboardEvent, index: number) => {
-  if (event.key === 'Backspace') {
-    const input = event.target as HTMLInputElement
-    // If current cell is empty and not the first, move to previous cell
-    if (!input.value && index > 0) {
-      event.preventDefault()
-      inputRefs.value[index - 1]?.focus()
-    }
-    // Otherwise, let the browser handle the backspace naturally
-    // The input event will sync code.value via handleCodeInput
-  }
-}
-
-const handlePaste = (event: ClipboardEvent) => {
-  event.preventDefault()
-  const pastedData = event.clipboardData?.getData('text') || ''
-  const digits = pastedData.replace(/[^0-9]/g, '').slice(0, 6).split('')
-
-  // Update both the ref and the input elements
-  digits.forEach((digit, index) => {
-    code.value[index] = digit
-    if (inputRefs.value[index]) {
-      inputRefs.value[index]!.value = digit
-    }
-  })
-
-  // Clear remaining inputs if pasted less than 6 digits
-  for (let i = digits.length; i < 6; i++) {
-    code.value[i] = ''
-    if (inputRefs.value[i]) {
-      inputRefs.value[i]!.value = ''
-    }
-  }
-
-  const focusIndex = Math.min(digits.length, 5)
+// After the error cascade drain finishes, reset state and refocus.
+const handleDrained = () => {
+  codeStatus.value = 'idle'
   nextTick(() => {
-    inputRefs.value[focusIndex]?.focus()
+    codeInputRef.value?.focus()
   })
 }
 
@@ -371,7 +314,7 @@ const handleVerifyAndSetup = async () => {
 }
 
 const handleVerify = async () => {
-  const totpCode = code.value.join('')
+  const totpCode = code.value
   if (totpCode.length !== 6 || !setupData.value) return
 
   verifying.value = true
@@ -381,14 +324,19 @@ const handleVerify = async () => {
       totp_code: totpCode,
       setup_token: setupData.value.setup_token
     })
-    appStore.showSuccess(t('profile.totp.enableSuccess'))
-    emit('success')
+    // Brief success animation before closing.
+    codeStatus.value = 'success'
+    window.setTimeout(() => {
+      appStore.showSuccess(t('profile.totp.enableSuccess'))
+      emit('success')
+    }, 450)
   } catch (err: any) {
     appStore.showError(extractApiErrorMessage(err, t('profile.totp.verifyFailed')))
-    code.value = ['', '', '', '', '', '']
-    nextTick(() => {
-      inputRefs.value[0]?.focus()
-    })
+    if (code.value) {
+      codeStatus.value = 'error'
+    } else {
+      codeStatus.value = 'idle'
+    }
   } finally {
     verifying.value = false
   }

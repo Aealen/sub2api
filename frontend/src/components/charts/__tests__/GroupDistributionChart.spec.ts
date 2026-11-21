@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 
 import GroupDistributionChart from '../GroupDistributionChart.vue'
 
@@ -35,6 +36,11 @@ vi.mock('vue-chartjs', () => ({
 }))
 
 describe('GroupDistributionChart', () => {
+  beforeEach(() => {
+    // The component reads the app store's brand theme for its series colors.
+    setActivePinia(createPinia())
+  })
+
   const groupStats = [
     {
       group_id: 1,

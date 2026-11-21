@@ -323,16 +323,9 @@
     >
       <div class="py-2">
         <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('admin.audit.clearConfirm.totpHint') }}</p>
-        <input
-          v-model.trim="clearTotpCode"
-          type="text"
-          inputmode="numeric"
-          maxlength="6"
-          autocomplete="one-time-code"
-          class="input mt-4 text-center text-lg tracking-[0.5em]"
-          placeholder="••••••"
-          @keyup.enter="submitClear"
-        />
+        <div class="mt-4 flex justify-center">
+          <CodeSlotsInput v-model="clearTotpCode" testid="audit-clear-totp" />
+        </div>
       </div>
       <template #footer>
         <button type="button" class="btn btn-secondary" :disabled="clearing" @click="cancelClearTotp">
@@ -363,6 +356,7 @@ import type { Column } from '@/components/common/types'
 import Pagination from '@/components/common/Pagination.vue'
 import Select from '@/components/common/Select.vue'
 import BaseDialog from '@/components/common/BaseDialog.vue'
+import CodeSlotsInput from '@/components/auth/CodeSlotsInput.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { useAppStore } from '@/stores'

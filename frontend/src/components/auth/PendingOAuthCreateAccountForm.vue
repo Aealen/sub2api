@@ -34,21 +34,18 @@
         @error="onTurnstileError"
       />
     </div>
-    <div v-if="emailVerifyEnabled" class="flex gap-3">
-      <input
-        v-model="verifyCode"
-        :data-testid="`${testIdPrefix}-create-account-verify-code`"
-        type="text"
-        inputmode="numeric"
-        maxlength="6"
-        class="input min-w-0 flex-1"
-        placeholder="123456"
-        :disabled="isSubmitting"
-      />
+    <div v-if="emailVerifyEnabled" class="space-y-3">
+      <div class="flex justify-center">
+        <CodeSlotsInput
+          v-model="verifyCode"
+          :testid="`${testIdPrefix}-create-account-verify-code`"
+          :disabled="isSubmitting"
+        />
+      </div>
       <button
         :data-testid="`${testIdPrefix}-create-account-send-code`"
         type="button"
-        class="btn btn-secondary shrink-0"
+        class="btn btn-secondary w-full"
         :disabled="isSubmitting || isSendingCode || countdown > 0 || !email.trim() || (turnstileEnabled && !turnstileToken)"
         @click="handleSendCode"
       >
@@ -100,6 +97,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import TurnstileWidget from '@/components/CaptchaChallenge.vue'
+import CodeSlotsInput from '@/components/auth/CodeSlotsInput.vue'
 import { getPublicSettings, sendPendingOAuthVerifyCode } from '@/api/auth'
 import { useAppStore } from '@/stores'
 

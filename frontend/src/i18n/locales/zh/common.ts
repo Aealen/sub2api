@@ -281,6 +281,10 @@ export default {
     sessionExpiredDesc: '请返回注册页面重新开始。',
     verificationCode: '验证码',
     verificationCodeHint: '请输入发送到您邮箱的6位验证码',
+    codeslots: {
+      ariaLabel: '一次性验证码',
+      progress: '已输入 {count}/{total} 位',
+    },
     sendingCode: '发送中...',
     sendCode: '发送验证码',
     clickToResend: '点击重新发送验证码',
