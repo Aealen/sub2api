@@ -526,10 +526,11 @@ export interface GroupAccountWithPriority {
  * List accounts bound to a group with their scheduling priority
  */
 export async function getGroupAccounts(groupId: number): Promise<GroupAccountWithPriority[]> {
-  const { data } = await apiClient.get<{ code: number; data: { items: GroupAccountWithPriority[] } }>(
+  // 注意：apiClient 响应拦截器已剥壳 {code,data}，此处 data 即 {items:[...]}
+  const { data } = await apiClient.get<{ items: GroupAccountWithPriority[] }>(
     `/admin/groups/${groupId}/accounts`
   )
-  return data.data?.items ?? []
+  return data?.items ?? []
 }
 
 /**
