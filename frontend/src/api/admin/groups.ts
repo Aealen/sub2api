@@ -527,7 +527,7 @@ export interface GroupAccountWithPriority {
  */
 export async function getGroupAccounts(groupId: number): Promise<GroupAccountWithPriority[]> {
   const { data } = await apiClient.get<{ code: number; data: { items: GroupAccountWithPriority[] } }>(
-    `/groups/${groupId}/accounts`
+    `/admin/groups/${groupId}/accounts`
   )
   return data.data?.items ?? []
 }
@@ -539,5 +539,5 @@ export async function updateGroupAccountPriorities(
   groupId: number,
   items: Array<{ account_id: number; priority: number }>
 ): Promise<void> {
-  await apiClient.put(`/groups/${groupId}/accounts/priority`, { items })
+  await apiClient.put(`/admin/groups/${groupId}/accounts/priority`, { items })
 }
