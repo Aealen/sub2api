@@ -5,36 +5,11 @@
 /* ============================================================
    品牌主题色变量（tailwind.config.js 的 primary 色板引用）
    值为 "R G B" 通道，配合 <alpha-value> 支持透明度写法。
-   默认主题：Teal 青色系（上游原版，与 LOGO 声波色同源）；
-   [data-theme='aowu']：Violet 紫色系（aowu-ai LOGO 月亮主色）。
+   默认主题：Aowu Violet 紫色系（aowu-ai LOGO 月亮主色，品牌默认）；
+   [data-theme='teal']：Teal 青色系（上游原版经典配色，可切回）。
    切换由 app store 的 brandTheme 写入 <html data-theme='...'>。
    ============================================================ */
 :root {
-  --color-primary-50: 240 253 250;   /* #f0fdfa teal-50 */
-  --color-primary-100: 204 251 241;  /* #ccfbf1 */
-  --color-primary-200: 153 246 228;  /* #99f6e4 */
-  --color-primary-300: 94 234 212;   /* #5eead4 */
-  --color-primary-400: 45 212 191;   /* #2dd4bf */
-  --color-primary-500: 20 184 166;   /* #14b8a6 */
-  --color-primary-600: 13 148 136;   /* #0d9488 */
-  --color-primary-700: 15 118 110;   /* #0f766e */
-  --color-primary-800: 17 94 89;     /* #115e59 */
-  --color-primary-900: 19 78 74;     /* #134e4a */
-  --color-primary-950: 4 47 46;      /* #042f2e */
-  /* dark 底色板默认 = slate 蓝灰（上游原样）；[data-theme=aowu] 在其后覆盖为紫调暗色板（同特异性按源顺序取胜，顺序关键） */
-  --color-dark-50: 248 250 252;
-  --color-dark-100: 241 245 249;
-  --color-dark-200: 226 232 240;
-  --color-dark-300: 203 213 225;
-  --color-dark-400: 148 163 184;
-  --color-dark-500: 100 116 139;
-  --color-dark-600: 71 85 105;
-  --color-dark-700: 51 65 85;
-  --color-dark-800: 30 41 59;
-  --color-dark-900: 15 23 42;
-  --color-dark-950: 2 6 23;}
-
-[data-theme='aowu'] {
   --color-primary-50: 245 243 255;   /* #f5f3ff violet-50 */
   --color-primary-100: 237 233 254;  /* #ede9fe */
   --color-primary-200: 221 214 254;  /* #ddd6fe */
@@ -46,8 +21,7 @@
   --color-primary-800: 91 33 182;    /* #5b21b6 */
   --color-primary-900: 76 29 149;    /* #4c1d95 */
   --color-primary-950: 46 16 101;    /* #2e1065 */
-
-  /* dark 底色板紫调覆盖：明度梯度对齐原 slate，色相转紫 */
+  /* dark 底色板默认 = 紫调暗色板：明度梯度对齐上游 slate，色相转紫 */
   --color-dark-50: 246 244 251;
   --color-dark-100: 236 233 246;
   --color-dark-200: 217 212 234;
@@ -58,7 +32,33 @@
   --color-dark-700: 56 48 79;
   --color-dark-800: 37 31 56;
   --color-dark-900: 23 18 38;
-  --color-dark-950: 11 8 20;
+  --color-dark-950: 11 8 20;}
+
+/* 经典青主题（上游原版观感）：Teal 主色 + slate 暗色板 */
+[data-theme='teal'] {
+  --color-primary-50: 240 253 250;   /* #f0fdfa teal-50 */
+  --color-primary-100: 204 251 241;  /* #ccfbf1 */
+  --color-primary-200: 153 246 228;  /* #99f6e4 */
+  --color-primary-300: 94 234 212;   /* #5eead4 */
+  --color-primary-400: 45 212 191;   /* #2dd4bf */
+  --color-primary-500: 20 184 166;   /* #14b8a6 */
+  --color-primary-600: 13 148 136;   /* #0d9488 */
+  --color-primary-700: 15 118 110;   /* #0f766e */
+  --color-primary-800: 17 94 89;     /* #115e59 */
+  --color-primary-900: 19 78 74;     /* #134e4a */
+  --color-primary-950: 4 47 46;      /* #042f2e */
+
+  --color-dark-50: 248 250 252;
+  --color-dark-100: 241 245 249;
+  --color-dark-200: 226 232 240;
+  --color-dark-300: 203 213 225;
+  --color-dark-400: 148 163 184;
+  --color-dark-500: 100 116 139;
+  --color-dark-600: 71 85 105;
+  --color-dark-700: 51 65 85;
+  --color-dark-800: 30 41 59;
+  --color-dark-900: 15 23 42;
+  --color-dark-950: 2 6 23;
 }
 
 @layer base {

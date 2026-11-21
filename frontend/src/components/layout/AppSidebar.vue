@@ -956,10 +956,10 @@ function toggleSidebar() {
 // ==================== 外观菜单（明暗模式 + 品牌主题色） ====================
 const appearanceOpen = ref(false)
 
-// 色卡使用各主题的代表色（500 档），仅作选择器里的视觉标识。
+// 色卡使用各主题的代表色（500 档），仅作选择器里的视觉标识。默认主题（Aowu 紫）排在前。
 const brandThemeOptions = computed(() => [
-  { id: 'teal' as const, label: t('nav.brandThemeTeal'), swatch: '#14b8a6' },
-  { id: 'aowu' as const, label: t('nav.brandThemeAowu'), swatch: '#8b5cf6' }
+  { id: 'aowu' as const, label: t('nav.brandThemeAowu'), swatch: '#8b5cf6' },
+  { id: 'teal' as const, label: t('nav.brandThemeTeal'), swatch: '#14b8a6' }
 ])
 
 function selectBrandTheme(id: 'teal' | 'aowu') {

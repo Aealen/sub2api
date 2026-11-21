@@ -15,11 +15,13 @@ import {
 import { getPublicSettings as fetchPublicSettingsAPI } from '@/api/auth'
 
 // 品牌主题色标识（与明暗模式正交）。
-// 'teal'：上游默认青色系；'aowu'：Aowu 品牌紫色系。
+// 'aowu'：Aowu 品牌紫色系（默认）；'teal'：上游经典青色系（可切回）。
 export type BrandTheme = 'teal' | 'aowu'
 
 const BRAND_THEME_STORAGE_KEY = 'brandTheme'
 const BRAND_THEMES: BrandTheme[] = ['teal', 'aowu']
+// 品牌默认色切换（青→紫）的一次性迁移标记：旧存值不再沿用，统一落到新默认。
+const BRAND_THEME_MIGRATION_KEY = 'brandThemeVioletDefault'
 
 export const useAppStore = defineStore('app', () => {
   // ==================== State ====================
@@ -31,7 +33,7 @@ export const useAppStore = defineStore('app', () => {
   const toasts = ref<Toast[]>([])
 
   // 品牌主题色状态。应用方式：写入 <html data-theme='...'>，由 style.css 的 CSS 变量定义生效。
-  const brandTheme = ref<BrandTheme>('teal')
+  const brandTheme = ref<BrandTheme>('aowu')
 
   // Public settings cache state
   const publicSettingsLoaded = ref<boolean>(false)
@@ -447,19 +449,22 @@ export const useAppStore = defineStore('app', () => {
 
   // ==================== 品牌主题色 ====================
 
-  // 将当前主题写入 DOM（style.css 按 [data-theme] 切换 primary 变量组）。
+  // 将当前主题写入 DOM（style.css 按 [data-theme] 切换 primary 变量组；:root 默认即 Aowu 紫）。
   function applyBrandThemeToDom(theme: BrandTheme): void {
-    if (theme === 'teal') {
-      delete document.documentElement.dataset.theme
-    } else {
-      document.documentElement.dataset.theme = theme
-    }
+    document.documentElement.dataset.theme = theme
   }
 
   // 启动时恢复本地选择（main.ts 在挂载前调用，避免主题闪变）。
   function initBrandTheme(): void {
-    const saved = localStorage.getItem(BRAND_THEME_STORAGE_KEY) as BrandTheme | null
-    brandTheme.value = saved && BRAND_THEMES.includes(saved) ? saved : 'teal'
+    // 一次性迁移：品牌默认色由青改紫，迁移前的旧存值统一作废落到新默认。
+    if (!localStorage.getItem(BRAND_THEME_MIGRATION_KEY)) {
+      localStorage.removeItem(BRAND_THEME_STORAGE_KEY)
+      localStorage.setItem(BRAND_THEME_MIGRATION_KEY, '1')
+      brandTheme.value = 'aowu'
+    } else {
+      const saved = localStorage.getItem(BRAND_THEME_STORAGE_KEY) as BrandTheme | null
+      brandTheme.value = saved && BRAND_THEMES.includes(saved) ? saved : 'aowu'
+    }
     applyBrandThemeToDom(brandTheme.value)
   }
 
