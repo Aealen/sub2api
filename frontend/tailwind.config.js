@@ -5,7 +5,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        // 主色调 - 走 CSS 变量以支持品牌主题切换（默认 teal；[data-theme='aowu'] 覆盖为 violet，见 style.css）。
+        // 主色调 - 走 CSS 变量以支持品牌主题切换（默认 Aowu 紫；[data-theme='teal'] 切换为经典青，见 style.css）。
         // 变量值存 "R G B" 通道，配合 <alpha-value> 让 primary-500/25 之类透明度写法继续生效。
         primary: {
           50: 'rgb(var(--color-primary-50) / <alpha-value>)',
@@ -119,8 +119,8 @@ export default {
           '100%': { backgroundPosition: '200% 0' }
         },
         glow: {
-          '0%': { boxShadow: '0 0 20px rgba(20, 184, 166, 0.25)' },
-          '100%': { boxShadow: '0 0 30px rgba(20, 184, 166, 0.4)' }
+          '0%': { boxShadow: '0 0 20px rgb(var(--color-primary-500) / 0.25)' },
+          '100%': { boxShadow: '0 0 30px rgb(var(--color-primary-500) / 0.4)' }
         }
       },
       backdropBlur: {

@@ -207,7 +207,7 @@
             :class="[
               'flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-2 py-2.5 text-xs font-medium transition-all sm:gap-2 sm:px-4 sm:text-sm',
               form.platform === 'deepseek'
-                ? 'bg-white text-teal-600 shadow-sm dark:bg-dark-600 dark:text-teal-400'
+                ? 'bg-white text-primary-600 shadow-sm dark:bg-dark-600 dark:text-primary-400'
                 : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
             ]"
           >
@@ -5343,7 +5343,7 @@ const cnAccentActiveClass = computed(() => {
     case 'zhipu':
       return 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
     case 'deepseek':
-      return 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
+      return 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
     case 'minimax':
       return 'border-rose-500 bg-rose-50 dark:bg-rose-900/20'
     case 'opencode_go':
@@ -5359,7 +5359,7 @@ const cnAccentIconClass = computed(() => {
     case 'zhipu':
       return 'bg-indigo-500 text-white'
     case 'deepseek':
-      return 'bg-teal-500 text-white'
+      return 'bg-primary-500 text-white'
     case 'minimax':
       return 'bg-rose-500 text-white'
     case 'opencode_go':

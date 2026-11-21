@@ -6,7 +6,8 @@
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
           {{ t('auth.createAccount') }}
         </h2>
-        <p class="mt-2 text-sm text-gray-500 dark:text-dark-400">
+        <div class="mx-auto mt-3 h-1 w-12 rounded-full bg-gradient-to-r from-primary-500 to-pink-500"></div>
+        <p class="mt-3 text-sm text-gray-500 dark:text-dark-400">
           {{ t('auth.signUpToStart', { siteName }) }}
         </p>
       </div>
@@ -440,7 +441,7 @@ const aliyunCaptchaEnabled = ref<boolean>(false)
 const aliyunCaptchaSceneId = ref<string>('')
 const aliyunCaptchaPrefix = ref<string>('')
 const aliyunCaptchaRegion = ref<string>('cn')
-const siteName = ref<string>('Sub2API')
+const siteName = ref<string>('Aowu AI')
 const linuxdoOAuthEnabled = ref<boolean>(false)
 const wechatOAuthEnabled = ref<boolean>(false)
 const oidcOAuthEnabled = ref<boolean>(false)
@@ -577,7 +578,7 @@ onMounted(async () => {
     aliyunCaptchaSceneId.value = settings.aliyun_captcha_scene_id || ''
     aliyunCaptchaPrefix.value = settings.aliyun_captcha_prefix || ''
     aliyunCaptchaRegion.value = settings.aliyun_captcha_region || 'cn'
-    siteName.value = settings.site_name || 'Sub2API'
+    siteName.value = settings.site_name || 'Aowu AI'
     linuxdoOAuthEnabled.value = settings.linuxdo_oauth_enabled
     wechatOAuthEnabled.value = isWeChatWebOAuthEnabled(settings)
     oidcOAuthEnabled.value = settings.oidc_oauth_enabled
@@ -974,13 +975,7 @@ function validateForm(): boolean {
     isValid = false
   }
 
-  // Invitation code validation (required when enabled)
-  if (invitationCodeEnabled.value) {
-    if (!formData.invitation_code.trim()) {
-      errors.invitation_code = t('auth.invitationCodeRequired')
-      isValid = false
-    }
-  }
+  // Invitation code is optional: it is validated (and redeemed) only when provided.
 
   // Turnstile validation
   if (turnstileEnabled.value && !turnstileToken.value) {

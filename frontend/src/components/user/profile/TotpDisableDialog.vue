@@ -28,15 +28,10 @@
           <!-- Email verification -->
           <div v-if="verificationMethod === 'email'">
             <label class="input-label">{{ t('profile.totp.emailCode') }}</label>
-            <div class="flex gap-2">
-              <input
-                v-model="form.emailCode"
-                type="text"
-                maxlength="6"
-                inputmode="numeric"
-                class="input flex-1"
-                :placeholder="t('profile.totp.enterEmailCode')"
-              />
+            <div class="flex justify-center">
+              <CodeSlotsInput v-model="form.emailCode" data-testid="totp-disable-email-code" />
+            </div>
+            <div class="mt-3 flex justify-end">
               <button
                 type="button"
                 class="btn btn-secondary whitespace-nowrap"
@@ -88,6 +83,7 @@ import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { totpAPI } from '@/api'
 import { extractApiErrorMessage } from '@/utils/apiError'
+import CodeSlotsInput from '@/components/auth/CodeSlotsInput.vue'
 
 const emit = defineEmits<{
   close: []
