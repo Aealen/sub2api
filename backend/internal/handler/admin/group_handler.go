@@ -1214,3 +1214,67 @@ func (h *GroupHandler) UpdateSortOrder(c *gin.Context) {
 
 	response.Success(c, gin.H{"message": "Sort order updated successfully"})
 }
+
+// GetGroupAccounts 列出分组内账号及其调度优先级
+// GET /api/v1/admin/groups/:id/accounts
+func (h *GroupHandler) GetGroupAccounts(c *gin.Context) {
+	if h.rejectUnsupportedSimpleModeOperation(c, "group_accounts") {
+		return
+	}
+	groupID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "Invalid group ID")
+		return
+	}
+
+	items, err := h.adminService.ListGroupAccountsWithPriority(c.Request.Context(), groupID)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	if items == nil {
+		items = []service.GroupAccountWithPriority{}
+	}
+	response.Success(c, gin.H{"items": items})
+}
+
+type updateGroupAccountPrioritiesRequest struct {
+	Items []struct {
+		AccountID int64 `json:"account_id" binding:"required"`
+		Priority  int   `json:"priority" binding:"required,min=1"`
+	} `json:"items" binding:"required,min=1,dive"`
+}
+
+// UpdateGroupAccountPriorities 批量更新账号在指定分组内的调度优先级
+// PUT /api/v1/admin/groups/:id/accounts/priority
+func (h *GroupHandler) UpdateGroupAccountPriorities(c *gin.Context) {
+	if h.rejectUnsupportedSimpleModeOperation(c, "group_accounts") {
+		return
+	}
+	groupID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.BadRequest(c, "Invalid group ID")
+		return
+	}
+
+	var req updateGroupAccountPrioritiesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	updates := make([]service.AccountGroupPriorityUpdate, 0, len(req.Items))
+	for _, item := range req.Items {
+		updates = append(updates, service.AccountGroupPriorityUpdate{
+			AccountID: item.AccountID,
+			Priority:  item.Priority,
+		})
+	}
+
+	if err := h.adminService.UpdateGroupAccountPriorities(c.Request.Context(), groupID, updates); err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	response.Success(c, gin.H{"message": "Account priorities updated successfully"})
+}

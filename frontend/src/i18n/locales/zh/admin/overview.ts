@@ -1033,6 +1033,21 @@ export default {
         privacySetOnlyEnabled: '已启用 — Privacy 未设置的账号将被排除',
         disabled: '未启用'
       },
+      accountsSection: {
+        title: '组内账号与调度优先级',
+        hint: '同分组内数值越小越优先：高优先级账号可用时优先调度，满载/限流时自动降级到下一优先级。',
+        save: '保存优先级',
+        saving: '保存中…',
+        empty: '该分组暂未绑定账号（在账号管理中将账号绑定到此分组）',
+        loadFailed: '加载组内账号失败',
+        statusActive: '正常',
+        statusInactive: '停用',
+        paused: '暂停调度',
+        priorityLabel: '优先级',
+        saveSuccess: '组内账号优先级已更新',
+        saveFailed: '保存组内账号优先级失败',
+        noChanges: '优先级未发生变化'
+      },
       i18nField: {
         default: '默认',
         add: '新增 {language} 版',

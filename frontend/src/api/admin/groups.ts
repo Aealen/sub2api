@@ -506,7 +506,38 @@ export const groupsAPI = {
   batchSetGroupRPMOverrides,
   updateSortOrder,
   getUsageSummary,
-  getCapacitySummary
+  getCapacitySummary,
+  getGroupAccounts,
+  updateGroupAccountPriorities
 }
 
 export default groupsAPI
+
+export interface GroupAccountWithPriority {
+  account_id: number
+  name: string
+  platform: string
+  status: string
+  schedulable: boolean
+  priority: number
+}
+
+/**
+ * List accounts bound to a group with their scheduling priority
+ */
+export async function getGroupAccounts(groupId: number): Promise<GroupAccountWithPriority[]> {
+  const { data } = await apiClient.get<{ code: number; data: { items: GroupAccountWithPriority[] } }>(
+    `/groups/${groupId}/accounts`
+  )
+  return data.data?.items ?? []
+}
+
+/**
+ * Batch-update per-group scheduling priority for bound accounts
+ */
+export async function updateGroupAccountPriorities(
+  groupId: number,
+  items: Array<{ account_id: number; priority: number }>
+): Promise<void> {
+  await apiClient.put(`/groups/${groupId}/accounts/priority`, { items })
+}
