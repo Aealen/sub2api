@@ -156,6 +156,7 @@ func (r *usageLogRepository) GetUserSpendingRanking(ctx context.Context, startTi
 				COALESCE(us.email, '') as email,
 				COALESCE(us.username, '') as username,
 				COALESCE(SUM(u.actual_cost), 0) as actual_cost,
+				COALESCE(SUM(COALESCE(u.account_stats_cost, u.total_cost) * COALESCE(u.account_rate_multiplier, 1)), 0) as account_cost,
 				COUNT(*) as requests,
 				COALESCE(SUM(u.input_tokens + u.output_tokens + u.cache_creation_tokens + u.cache_read_tokens), 0) as tokens
 			FROM usage_logs u
@@ -169,9 +170,11 @@ func (r *usageLogRepository) GetUserSpendingRanking(ctx context.Context, startTi
 				email,
 				username,
 				actual_cost,
+				account_cost,
 				requests,
 				tokens,
 				COALESCE(SUM(actual_cost) OVER (), 0) as total_actual_cost,
+				COALESCE(SUM(account_cost) OVER (), 0) as total_account_cost,
 				COALESCE(SUM(requests) OVER (), 0) as total_requests,
 				COALESCE(SUM(tokens) OVER (), 0) as total_tokens
 			FROM user_spend
@@ -183,9 +186,11 @@ func (r *usageLogRepository) GetUserSpendingRanking(ctx context.Context, startTi
 			email,
 			username,
 			actual_cost,
+			account_cost,
 			requests,
 			tokens,
 			total_actual_cost,
+			total_account_cost,
 			total_requests,
 			total_tokens
 		FROM ranked
@@ -205,11 +210,12 @@ func (r *usageLogRepository) GetUserSpendingRanking(ctx context.Context, startTi
 
 	ranking := make([]UserSpendingRankingItem, 0)
 	totalActualCost := 0.0
+	totalAccountCost := 0.0
 	totalRequests := int64(0)
 	totalTokens := int64(0)
 	for rows.Next() {
 		var row UserSpendingRankingItem
-		if err = rows.Scan(&row.UserID, &row.Email, &row.Username, &row.ActualCost, &row.Requests, &row.Tokens, &totalActualCost, &totalRequests, &totalTokens); err != nil {
+		if err = rows.Scan(&row.UserID, &row.Email, &row.Username, &row.ActualCost, &row.AccountCost, &row.Requests, &row.Tokens, &totalActualCost, &totalAccountCost, &totalRequests, &totalTokens); err != nil {
 			return nil, err
 		}
 		ranking = append(ranking, row)
@@ -219,10 +225,11 @@ func (r *usageLogRepository) GetUserSpendingRanking(ctx context.Context, startTi
 	}
 
 	return &UserSpendingRankingResponse{
-		Ranking:         ranking,
-		TotalActualCost: totalActualCost,
-		TotalRequests:   totalRequests,
-		TotalTokens:     totalTokens,
+		Ranking:          ranking,
+		TotalActualCost:  totalActualCost,
+		TotalAccountCost: totalAccountCost,
+		TotalRequests:    totalRequests,
+		TotalTokens:      totalTokens,
 	}, nil
 }
 

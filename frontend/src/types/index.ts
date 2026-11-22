@@ -2260,6 +2260,7 @@ export interface UserSpendingRankingItem {
   email: string
   username: string
   actual_cost: number
+  account_cost: number
   requests: number
   tokens: number
 }
@@ -2267,6 +2268,7 @@ export interface UserSpendingRankingItem {
 export interface UserSpendingRankingResponse {
   ranking: UserSpendingRankingItem[]
   total_actual_cost: number
+  total_account_cost: number
   total_requests: number
   total_tokens: number
   start_date: string

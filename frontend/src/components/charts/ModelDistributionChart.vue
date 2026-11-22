@@ -115,6 +115,7 @@
               <th class="pb-2 text-right">{{ t('admin.dashboard.tokens') }}</th>
               <th class="pb-2 text-right">{{ t('admin.dashboard.actual') }}</th>
               <th v-if="showAccountCost" class="pb-2 text-right">{{ t('admin.dashboard.accountCost') }}</th>
+              <th v-if="showAccountCost" class="pb-2 text-right">{{ t('admin.dashboard.profit') }}</th>
               <th class="pb-2 text-right">{{ t('admin.dashboard.standard') }}</th>
             </tr>
           </thead>
@@ -147,6 +148,9 @@
                 </td>
                 <td v-if="showAccountCost" class="py-1.5 text-right text-orange-500 dark:text-orange-400">
                   ${{ formatCost(model.account_cost) }}
+                </td>
+                <td v-if="showAccountCost" class="py-1.5 text-right font-medium" :class="((model.actual_cost ?? 0) - (model.account_cost ?? 0)) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                  ${{ formatCost((model.actual_cost ?? 0) - (model.account_cost ?? 0)) }}
                 </td>
                 <td class="py-1.5 text-right text-gray-400 dark:text-gray-500">
                   ${{ formatCost(model.cost) }}
@@ -194,6 +198,7 @@
               <th class="pb-2 text-right">{{ t('admin.dashboard.spendingRankingRequests') }}</th>
               <th class="pb-2 text-right">{{ t('admin.dashboard.spendingRankingTokens') }}</th>
               <th class="pb-2 text-right">{{ t('admin.dashboard.spendingRankingSpend') }}</th>
+              <th class="pb-2 text-right">{{ t('admin.dashboard.profit') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -227,6 +232,12 @@
               </td>
               <td class="py-1.5 text-right text-green-600 dark:text-green-400">
                 ${{ formatCost(item.actual_cost) }}
+              </td>
+              <td
+                class="py-1.5 text-right font-medium"
+                :class="((item.actual_cost ?? 0) - (item.account_cost ?? 0)) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'"
+              >
+                ${{ formatCost((item.actual_cost ?? 0) - (item.account_cost ?? 0)) }}
               </td>
             </tr>
           </tbody>
@@ -268,6 +279,7 @@ const props = withDefaults(defineProps<{
   enableRankingView?: boolean
   rankingItems?: UserSpendingRankingItem[]
   rankingTotalActualCost?: number
+  rankingTotalAccountCost?: number
   rankingTotalRequests?: number
   rankingTotalTokens?: number
   loading?: boolean
@@ -288,6 +300,7 @@ const props = withDefaults(defineProps<{
   enableRankingView: false,
   rankingItems: () => [],
   rankingTotalActualCost: 0,
+  rankingTotalAccountCost: 0,
   rankingTotalRequests: 0,
   rankingTotalTokens: 0,
   loading: false,
@@ -337,7 +350,7 @@ const emit = defineEmits<{
 
 const enableRankingView = computed(() => props.enableRankingView)
 const showAccountCost = computed(() => props.showAccountCost)
-const distributionColspan = computed(() => showAccountCost.value ? 6 : 5)
+const distributionColspan = computed(() => showAccountCost.value ? 7 : 5)
 const chartColors = useChartSeries(12)
 const activeView = ref<'model_distribution' | 'spending_ranking'>('model_distribution')
 
@@ -398,10 +411,12 @@ const otherRankingItem = computed<RankingDisplayItem | null>(() => {
   if (!props.rankingItems?.length) return null
 
   const rankedActualCost = props.rankingItems.reduce((sum, item) => sum + toFiniteNumber(item.actual_cost), 0)
+  const rankedAccountCost = props.rankingItems.reduce((sum, item) => sum + toFiniteNumber(item.account_cost), 0)
   const rankedRequests = props.rankingItems.reduce((sum, item) => sum + toFiniteNumber(item.requests), 0)
   const rankedTokens = props.rankingItems.reduce((sum, item) => sum + toFiniteNumber(item.tokens), 0)
 
   const otherActualCost = Math.max((props.rankingTotalActualCost || 0) - rankedActualCost, 0)
+  const otherAccountCost = Math.max(0, (props.rankingTotalAccountCost ?? 0) - rankedAccountCost)
   const otherRequests = Math.max((props.rankingTotalRequests || 0) - rankedRequests, 0)
   const otherTokens = Math.max((props.rankingTotalTokens || 0) - rankedTokens, 0)
 
@@ -412,6 +427,7 @@ const otherRankingItem = computed<RankingDisplayItem | null>(() => {
     email: '',
     username: '',
     actual_cost: otherActualCost,
+    account_cost: otherAccountCost,
     requests: otherRequests,
     tokens: otherTokens,
     isOther: true
