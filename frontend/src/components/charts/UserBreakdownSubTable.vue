@@ -28,6 +28,13 @@
           <td v-if="showAccountCost" class="py-1 text-right text-orange-500 dark:text-orange-400">
             ${{ formatCost(user.account_cost) }}
           </td>
+          <td
+            v-if="showAccountCost"
+            class="py-1 text-right font-medium"
+            :class="((user.actual_cost ?? 0) - (user.account_cost ?? 0)) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'"
+          >
+            ${{ formatCost((user.actual_cost ?? 0) - (user.account_cost ?? 0)) }}
+          </td>
           <td class="py-1 pr-1 text-right text-gray-400 dark:text-gray-500">
             ${{ formatCost(user.cost) }}
           </td>

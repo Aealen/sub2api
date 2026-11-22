@@ -128,6 +128,13 @@
                     :title="t('admin.dashboard.standard')"
                     >${{ formatCost(stats.today_cost) }}</span
                   >
+                  <span class="text-gray-400 dark:text-gray-500"> / </span>
+                  <span
+                    class="font-medium"
+                    :class="(stats.today_actual_cost ?? 0) - (stats.today_account_cost ?? 0) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'"
+                    :title="t('admin.dashboard.profit')"
+                    >${{ formatCost((stats.today_actual_cost ?? 0) - (stats.today_account_cost ?? 0)) }}</span
+                  >
                 </p>
               </div>
             </div>
@@ -304,6 +311,7 @@
               :enable-ranking-view="true"
               :ranking-items="rankingItems"
               :ranking-total-actual-cost="rankingTotalActualCost"
+              :ranking-total-account-cost="rankingTotalAccountCost"
               :ranking-total-requests="rankingTotalRequests"
               :ranking-total-tokens="rankingTotalTokens"
               :loading="chartsLoading"
@@ -411,6 +419,7 @@ const userTrend = ref<UserUsageTrendPoint[]>([])
 const userTrendMetric = ref<'tokens' | 'actual_cost'>('tokens')
 const rankingItems = ref<UserSpendingRankingItem[]>([])
 const rankingTotalActualCost = ref(0)
+const rankingTotalAccountCost = ref(0)
 const rankingTotalRequests = ref(0)
 const rankingTotalTokens = ref(0)
 let chartLoadSeq = 0
@@ -734,6 +743,7 @@ const loadUserSpendingRanking = async () => {
     if (currentSeq !== rankingLoadSeq) return
     rankingItems.value = response.ranking || []
     rankingTotalActualCost.value = response.total_actual_cost || 0
+    rankingTotalAccountCost.value = response.total_account_cost || 0
     rankingTotalRequests.value = response.total_requests || 0
     rankingTotalTokens.value = response.total_tokens || 0
   } catch (error) {
@@ -741,6 +751,7 @@ const loadUserSpendingRanking = async () => {
     console.error('Error loading user spending ranking:', error)
     rankingItems.value = []
     rankingTotalActualCost.value = 0
+    rankingTotalAccountCost.value = 0
     rankingTotalRequests.value = 0
     rankingTotalTokens.value = 0
     rankingError.value = true

@@ -149,20 +149,22 @@ type UserUsageTrendPoint struct {
 
 // UserSpendingRankingItem represents a user spending ranking row.
 type UserSpendingRankingItem struct {
-	UserID     int64   `json:"user_id"`
-	Email      string  `json:"email"`
-	Username   string  `json:"username"`
-	ActualCost float64 `json:"actual_cost"` // 实际扣除
-	Requests   int64   `json:"requests"`
-	Tokens     int64   `json:"tokens"`
+	UserID      int64   `json:"user_id"`
+	Email       string  `json:"email"`
+	Username    string  `json:"username"`
+	ActualCost  float64 `json:"actual_cost"`  // 实际扣除
+	AccountCost float64 `json:"account_cost"` // 账号口径成本（利润 = 实际 - 成本）
+	Requests    int64   `json:"requests"`
+	Tokens      int64   `json:"tokens"`
 }
 
 // UserSpendingRankingResponse represents ranking rows plus total spend for the time range.
 type UserSpendingRankingResponse struct {
-	Ranking         []UserSpendingRankingItem `json:"ranking"`
-	TotalActualCost float64                   `json:"total_actual_cost"`
-	TotalRequests   int64                     `json:"total_requests"`
-	TotalTokens     int64                     `json:"total_tokens"`
+	Ranking          []UserSpendingRankingItem `json:"ranking"`
+	TotalActualCost  float64                   `json:"total_actual_cost"`
+	TotalAccountCost float64                   `json:"total_account_cost"`
+	TotalRequests    int64                     `json:"total_requests"`
+	TotalTokens      int64                     `json:"total_tokens"`
 }
 
 // UserBreakdownItem represents per-user usage breakdown within a dimension (group, model, endpoint).
