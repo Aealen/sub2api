@@ -17,12 +17,36 @@ let copiedResetTimer: number | undefined
 
 const allEndpoints = computed(() => {
   const items: Array<{ name: string; endpoint: string; description: string; isDefault: boolean }> = []
+  // 站点根地址（容忍管理员配置了 /v1 结尾或尾斜杠）
+  const baseRoot = props.apiBaseUrl.replace(/\/v1\/?$/, '').replace(/\/+$/, '')
   if (props.apiBaseUrl) {
+    // Anthropic (Claude Code)：客户端自行追加 /v1/messages，base 填站点根地址
     items.push({
-      name: t('keys.endpoints.title'),
+      name: t('keys.endpoints.anthropicDefault'),
       endpoint: props.apiBaseUrl,
       description: '',
       isDefault: true,
+    })
+    // OpenAI 兼容端点（Cherry Studio、NextChat 等客户端）
+    items.push({
+      name: t('keys.endpoints.openaiCompatible'),
+      endpoint: baseRoot.endsWith('/v1') ? baseRoot : `${baseRoot}/v1`,
+      description: t('keys.endpoints.openaiCompatibleDesc'),
+      isDefault: false,
+    })
+    // Gemini 原生端点
+    items.push({
+      name: t('keys.endpoints.geminiNative'),
+      endpoint: `${baseRoot}/v1beta`,
+      description: '',
+      isDefault: false,
+    })
+    // Antigravity 端点
+    items.push({
+      name: t('keys.endpoints.antigravity'),
+      endpoint: `${baseRoot}/antigravity/v1`,
+      description: '',
+      isDefault: false,
     })
   }
   for (const ep of props.customEndpoints) {
