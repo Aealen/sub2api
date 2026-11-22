@@ -41,13 +41,6 @@ const allEndpoints = computed(() => {
       description: '',
       isDefault: false,
     })
-    // Antigravity 端点
-    items.push({
-      name: t('keys.endpoints.antigravity'),
-      endpoint: `${baseRoot}/antigravity/v1`,
-      description: '',
-      isDefault: false,
-    })
   }
   for (const ep of props.customEndpoints) {
     items.push({ ...ep, isDefault: false })
