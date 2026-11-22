@@ -2,6 +2,7 @@
   <AppLayout>
     <TablePageLayout>
       <template #filters>
+        <AccessProtocolNotice :base-url="apiBaseUrlDisplay" />
         <div class="flex flex-col gap-3">
           <div class="flex flex-wrap items-center gap-3">
             <SearchInput
@@ -1229,6 +1230,7 @@ import BulkEditKeysModal from '@/components/keys/BulkEditKeysModal.vue'
 	import Icon from '@/components/icons/Icon.vue'
 	import UseKeyModal from '@/components/keys/UseKeyModal.vue'
 	import EndpointPopover from '@/components/keys/EndpointPopover.vue'
+	import AccessProtocolNotice from '@/components/keys/AccessProtocolNotice.vue'
 	import GroupBadge from '@/components/common/GroupBadge.vue'
 	import GroupOptionItem from '@/components/common/GroupOptionItem.vue'
 	import type { ApiKey, Group, PublicSettings, SubscriptionType, GroupPlatform, UpdateApiKeyRequest } from '@/types'

@@ -21,12 +21,12 @@ export interface UpdatePricingOverrideResult {
 }
 
 export async function getPricingOverride(): Promise<PricingOverrideResponse> {
-  const { data } = await apiClient.get<PricingOverrideResponse>('/channels/pricing-override')
+  const { data } = await apiClient.get<PricingOverrideResponse>('/admin/channels/pricing-override')
   return data
 }
 
 export async function updatePricingOverride(content: string): Promise<UpdatePricingOverrideResult> {
-  const { data } = await apiClient.put<UpdatePricingOverrideResult>('/channels/pricing-override', { content })
+  const { data } = await apiClient.put<UpdatePricingOverrideResult>('/admin/channels/pricing-override', { content })
   return data
 }
 
