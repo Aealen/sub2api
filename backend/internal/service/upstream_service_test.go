@@ -495,3 +495,92 @@ func TestCreateUpstreamRejectsDuplicateNameAndBaseURL(t *testing.T) {
 		t.Fatalf("default status = %q, want active", created.Status)
 	}
 }
+
+func TestCompareModelsGroupColumns(t *testing.T) {
+	ctx := context.Background()
+	repo := newFakeUpstreamRepo()
+	repo.upstreams = []Upstream{{ID: 1, Name: "华龙", Status: UpstreamStatusActive}}
+	repo.groups = []UpstreamGroup{{ID: 100, UpstreamID: 1, Name: "default", RateMultiplier: ptrFloat(0.48)}, {ID: 101, UpstreamID: 1, Name: "vip", RateMultiplier: ptrFloat(0.25)}}
+	repo.accounts = []UpstreamAccountRow{
+		{ID: 10, UpstreamID: 1, Name: "华龙-DS", Platform: PlatformAnthropic, Status: "active",
+			RateMultiplier: 0.48, ModelMapping: map[string]string{"claude-sonnet-4-5": "hl-cs"}},
+	}
+	// 分组台账：vip 组挂一条「价格即最终价」的台账
+	repo.prices = []UpstreamModelPrice{
+		{ID: 1, UpstreamID: 1, UpstreamGroupID: ptrInt64(101), UpstreamModel: "hl-cs-vip", ModelName: "claude-sonnet-4-5",
+			InputPricePerToken: ptrFloat(1e-6), Source: UpstreamPriceSourceManual},
+	}
+
+	svc := NewUpstreamService(repo, testBillingService(t))
+	result, err := svc.CompareModels(ctx, "", "")
+	if err != nil {
+		t.Fatalf("CompareModels error: %v", err)
+	}
+	// 列：default(分组) + vip(分组) + 综合
+	if len(result.Columns) != 3 {
+		t.Fatalf("columns = %d, want 3", len(result.Columns))
+	}
+	row := result.Rows[0]
+	if len(row.Cells) != 3 {
+		t.Fatalf("cells = %d, want 3", len(row.Cells))
+	}
+	byKey := map[string]UpstreamCompareCell{}
+	for _, cell := range row.Cells {
+		key := ledgerGroupKey(cell.GroupID)
+		byKey[key] = cell
+	}
+	// vip 台账价
+	vip := byKey["g:101"]
+	if vip.Source != upstreamCompareSourceLedger || vip.InputPricePerToken == nil || *vip.InputPricePerToken != 1e-6 {
+		t.Fatalf("vip cell wrong: %+v", vip)
+	}
+	// default 无台账 → 目录价 × 分组倍率
+	def := byKey["g:100"]
+	if def.Source != upstreamCompareSourceDerived || def.InputPricePerToken == nil || math.Abs(*def.InputPricePerToken-3e-06*0.48) > 1e-18 {
+		t.Fatalf("default cell wrong: %+v", def)
+	}
+	// 综合列：账号最低倍率
+	derived := byKey["-"]
+	if derived.Source != upstreamCompareSourceDerived || derived.AccountID == nil || *derived.AccountID != 10 {
+		t.Fatalf("derived cell wrong: %+v", derived)
+	}
+	if row.CheapestUpstreamID == nil || *row.CheapestUpstreamID != 1 || row.CheapestGroupID == nil || *row.CheapestGroupID != 101 {
+		t.Fatalf("cheapest = %v/%v, want upstream 1 group 101(vip 台账列)", row.CheapestUpstreamID, row.CheapestGroupID)
+	}
+}
+
+func TestCompareModelsGroupRateDerivationOnly(t *testing.T) {
+	ctx := context.Background()
+	repo := newFakeUpstreamRepo()
+	repo.upstreams = []Upstream{{ID: 1, Name: "PPDog", Status: UpstreamStatusActive}}
+	repo.groups = []UpstreamGroup{{ID: 200, UpstreamID: 1, Name: "特惠", RateMultiplier: ptrFloat(0.05)}}
+	repo.accounts = []UpstreamAccountRow{
+		{ID: 30, UpstreamID: 1, Name: "PPDog-A", Platform: PlatformAnthropic, Status: "active",
+			RateMultiplier: 0.12, ModelMapping: map[string]string{"claude-sonnet-4-5": "pd-cs"}},
+	}
+	// 无台账：分组列纯按分组倍率推导，综合列按账号倍率推导
+	svc := NewUpstreamService(repo, testBillingService(t))
+	result, err := svc.CompareModels(ctx, "", "claude-sonnet-4-5")
+	if err != nil {
+		t.Fatalf("CompareModels error: %v", err)
+	}
+	if len(result.Columns) != 2 || result.Columns[0].Kind != UpstreamCompareColumnGroup {
+		t.Fatalf("columns = %+v, want group + derived columns", result.Columns)
+	}
+	row := result.Rows[0]
+	if len(row.Cells) != 2 {
+		t.Fatalf("cells = %d, want 2", len(row.Cells))
+	}
+	var cell UpstreamCompareCell
+	for _, c := range row.Cells {
+		if c.GroupID != nil && *c.GroupID == 200 {
+			cell = c
+		}
+	}
+	if cell.GroupID == nil {
+		t.Fatal("group cell missing")
+	}
+	if cell.InputPricePerToken == nil || math.Abs(*cell.InputPricePerToken-3e-06*0.05) > 1e-18 {
+		t.Fatalf("cell price = %v, want %v", derefFloat(cell.InputPricePerToken), 3e-06*0.05)
+	}
+}

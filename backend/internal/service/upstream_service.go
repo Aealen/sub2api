@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -208,9 +209,31 @@ type UpstreamBundleImport struct {
 	ModelPrices []UpstreamModelPriceInput `json:"model_prices"`
 }
 
-// UpstreamCompareCell 比价矩阵单元格：某上游对某模型的进价。
+// UpstreamCompareColumnKind 比价列类型。
+const (
+	// UpstreamCompareColumnGroup 上游侧分组列（倍率来自 upstream_groups）。
+	UpstreamCompareColumnGroup = "group"
+	// UpstreamCompareColumnDerived 综合列：无分组信息时按账号最低倍率推导（含无分组台账）。
+	UpstreamCompareColumnDerived = "derived"
+)
+
+// UpstreamCompareColumn 比价矩阵列：上游 × 上游侧分组。
+//
+// 一个上游常有多个分组、多个倍率，只有一列会抹平价差；
+// GroupID 为 nil 表示该上游的「综合」列（无分组台账 + 账号最低倍率推导）。
+type UpstreamCompareColumn struct {
+	UpstreamID     int64    `json:"upstream_id"`
+	UpstreamName   string   `json:"upstream_name"`
+	GroupID        *int64   `json:"group_id"`
+	GroupName      string   `json:"group_name"`
+	RateMultiplier *float64 `json:"rate_multiplier"`
+	Kind           string   `json:"kind"` // group | derived
+}
+
+// UpstreamCompareCell 比价矩阵单元格：某上游某分组对某模型的进价。
 type UpstreamCompareCell struct {
 	UpstreamID          int64    `json:"upstream_id"`
+	GroupID             *int64   `json:"group_id"`
 	UpstreamName        string   `json:"upstream_name"`
 	InputPricePerToken  *float64 `json:"input_price_per_token"`
 	OutputPricePerToken *float64 `json:"output_price_per_token"`
@@ -220,21 +243,23 @@ type UpstreamCompareCell struct {
 	AccountName         string   `json:"account_name,omitempty"`
 }
 
-// UpstreamCompareRow 比价矩阵行：一个平台标准模型在各上游的进价。
+// UpstreamCompareRow 比价矩阵行：一个平台标准模型在各上游/分组的进价。
 type UpstreamCompareRow struct {
 	ModelName                   string                `json:"model_name"`
 	Platform                    string                `json:"platform"`
 	OfficialInputPricePerToken  *float64              `json:"official_input_price_per_token"`
 	OfficialOutputPricePerToken *float64              `json:"official_output_price_per_token"`
 	Cells                       []UpstreamCompareCell `json:"cells"`
-	// CheapestUpstreamID 进价最低的上游（仅在有 >=2 个可比单元格时填充）。
+	// CheapestUpstreamID / CheapestGroupID 进价最低的单元格（仅在有 >=2 个可比单元格时填充）。
 	CheapestUpstreamID *int64 `json:"cheapest_upstream_id"`
+	CheapestGroupID    *int64 `json:"cheapest_group_id"`
 }
 
 // UpstreamCompareResult 跨上游比价结果。
 type UpstreamCompareResult struct {
-	Upstreams []Upstream           `json:"upstreams"`
-	Rows      []UpstreamCompareRow `json:"rows"`
+	Upstreams []Upstream              `json:"upstreams"`
+	Columns   []UpstreamCompareColumn `json:"columns"`
+	Rows      []UpstreamCompareRow    `json:"rows"`
 }
 
 // UpstreamDetail 上游详情聚合。
@@ -780,8 +805,12 @@ func (s *UpstreamService) CompareModels(ctx context.Context, platform, search st
 	}
 
 	modelPlatform := make(map[string]string)
-	modelAliases := make(map[string]map[int64][]upstreamAccountRef)
+	modelAccounts := make(map[string]map[int64][]upstreamAccountRef)
+	upstreamHasAccounts := make(map[int64]bool)
 	for _, a := range accounts {
+		if a.UpstreamID != 0 {
+			upstreamHasAccounts[a.UpstreamID] = true
+		}
 		for source := range a.ModelMapping {
 			name := strings.TrimSpace(source)
 			if name == "" {
@@ -790,10 +819,10 @@ func (s *UpstreamService) CompareModels(ctx context.Context, platform, search st
 			if _, ok := modelPlatform[name]; !ok {
 				modelPlatform[name] = a.Platform
 			}
-			if modelAliases[name] == nil {
-				modelAliases[name] = make(map[int64][]upstreamAccountRef)
+			if modelAccounts[name] == nil {
+				modelAccounts[name] = make(map[int64][]upstreamAccountRef)
 			}
-			modelAliases[name][a.UpstreamID] = append(modelAliases[name][a.UpstreamID], upstreamAccountRef{
+			modelAccounts[name][a.UpstreamID] = append(modelAccounts[name][a.UpstreamID], upstreamAccountRef{
 				ID:             a.ID,
 				Name:           a.Name,
 				RateMultiplier: a.RateMultiplier,
@@ -801,8 +830,8 @@ func (s *UpstreamService) CompareModels(ctx context.Context, platform, search st
 		}
 	}
 
-	// 台账行键也进入行集合；账号 platform 优先，台账 platform 仅补齐账号未覆盖的模型
-	ledger := make(map[string]map[int64]*UpstreamModelPrice)
+	// 台账按 (上游, 分组) 归位；同一 key 有多条时保留进价最低的一条
+	ledger := make(map[string]map[int64]map[string]*UpstreamModelPrice)
 	for i := range prices {
 		p := &prices[i]
 		name := strings.TrimSpace(p.ModelName)
@@ -815,13 +844,48 @@ func (s *UpstreamService) CompareModels(ctx context.Context, platform, search st
 		if _, ok := modelPlatform[name]; !ok {
 			modelPlatform[name] = strings.TrimSpace(p.Platform)
 		}
+		key := ledgerGroupKey(p.UpstreamGroupID)
 		if ledger[name] == nil {
-			ledger[name] = make(map[int64]*UpstreamModelPrice)
+			ledger[name] = make(map[int64]map[string]*UpstreamModelPrice)
 		}
-		existing := ledger[name][p.UpstreamID]
-		// 同一上游同模型可能有多条（不同分组）：保留进价最低的一条
+		if ledger[name][p.UpstreamID] == nil {
+			ledger[name][p.UpstreamID] = make(map[string]*UpstreamModelPrice)
+		}
+		existing := ledger[name][p.UpstreamID][key]
 		if existing == nil || upstreamPriceLess(p, existing) {
-			ledger[name][p.UpstreamID] = p
+			ledger[name][p.UpstreamID][key] = p
+		}
+	}
+
+	// 列 = 上游 × 分组；上游有账号但未维护分组时补一个「综合」列（账号最低倍率推导）
+	columns := make([]UpstreamCompareColumn, 0, len(active)*2)
+	for _, u := range active {
+		groups, groupErr := s.repo.ListUpstreamGroups(ctx, u.ID)
+		if groupErr != nil {
+			return nil, groupErr
+		}
+		sort.Slice(groups, func(i, j int) bool {
+			return strings.ToLower(groups[i].Name) < strings.ToLower(groups[j].Name)
+		})
+		for i := range groups {
+			g := groups[i]
+			id := g.ID
+			columns = append(columns, UpstreamCompareColumn{
+				UpstreamID:     u.ID,
+				UpstreamName:   u.Name,
+				GroupID:        &id,
+				GroupName:      g.Name,
+				RateMultiplier: g.RateMultiplier,
+				Kind:           UpstreamCompareColumnGroup,
+			})
+		}
+		if upstreamHasAccounts[u.ID] {
+			columns = append(columns, UpstreamCompareColumn{
+				UpstreamID:   u.ID,
+				UpstreamName: u.Name,
+				GroupName:    UpstreamCompareDerivedColumnName,
+				Kind:         UpstreamCompareColumnDerived,
+			})
 		}
 	}
 
@@ -845,32 +909,43 @@ func (s *UpstreamService) CompareModels(ctx context.Context, platform, search st
 				row.OfficialOutputPricePerToken = nonZeroFloatPtr(mp.OutputPricePerToken)
 			}
 		}
-		var cheapestID *int64
-		var cheapestInput float64
-		for _, u := range active {
-			cell := s.buildCompareCell(u, name, row.OfficialInputPricePerToken, ledger[name], modelAliases[name])
+		var (
+			cheapestUpstreamID *int64
+			cheapestGroupID    *int64
+			cheapestInput      float64
+		)
+		for _, col := range columns {
+			cell := s.buildCompareCellForColumn(col, name, row.OfficialInputPricePerToken, ledger[name][col.UpstreamID], modelAccounts[name])
 			if cell == nil {
 				continue
 			}
 			row.Cells = append(row.Cells, *cell)
 			if cell.InputPricePerToken != nil && *cell.InputPricePerToken > 0 {
-				if cheapestID == nil || *cell.InputPricePerToken < cheapestInput {
+				if cheapestUpstreamID == nil || *cell.InputPricePerToken < cheapestInput {
 					cheapestInput = *cell.InputPricePerToken
-					id := cell.UpstreamID
-					cheapestID = &id
+					upID := cell.UpstreamID
+					cheapestUpstreamID = &upID
+					if cell.GroupID != nil {
+						gid := *cell.GroupID
+						cheapestGroupID = &gid
+					}
 				}
 			}
 		}
-		if len(row.Cells) >= 2 && cheapestID != nil {
-			row.CheapestUpstreamID = cheapestID
+		if len(row.Cells) >= 2 && cheapestUpstreamID != nil {
+			row.CheapestUpstreamID = cheapestUpstreamID
+			row.CheapestGroupID = cheapestGroupID
 		}
 		rows = append(rows, row)
 	}
 	sort.Slice(rows, func(i, j int) bool {
 		return strings.ToLower(rows[i].ModelName) < strings.ToLower(rows[j].ModelName)
 	})
-	return &UpstreamCompareResult{Upstreams: active, Rows: rows}, nil
+	return &UpstreamCompareResult{Upstreams: active, Columns: columns, Rows: rows}, nil
 }
+
+// UpstreamCompareDerivedColumnName 综合列（无分组）在表头显示的名字。
+const UpstreamCompareDerivedColumnName = "综合"
 
 // upstreamAccountRef 比价推导用的账号引用。
 type upstreamAccountRef struct {
@@ -879,18 +954,32 @@ type upstreamAccountRef struct {
 	RateMultiplier float64
 }
 
-// buildCompareCell 计算某上游对某模型的进价格。
-func (s *UpstreamService) buildCompareCell(
-	u Upstream,
+// ledgerGroupKey 台账按分组归位的索引键。
+func ledgerGroupKey(groupID *int64) string {
+	if groupID == nil {
+		return "-"
+	}
+	return "g:" + strconv.FormatInt(*groupID, 10)
+}
+
+// buildCompareCellForColumn 计算某列（上游×分组）对某模型的进价。
+//
+// 优先级：该分组台账价 → 分组倍率推导（目录价 × 分组倍率）→ 综合列用账号最低倍率推导。
+func (s *UpstreamService) buildCompareCellForColumn(
+	col UpstreamCompareColumn,
 	modelName string,
 	officialInput *float64,
-	ledgerForModel map[int64]*UpstreamModelPrice,
-	accountsForModel map[int64][]upstreamAccountRef,
+	ledgerForUpstream map[string]*UpstreamModelPrice,
+	accountsForUpstream map[int64][]upstreamAccountRef,
 ) *UpstreamCompareCell {
-	cell := &UpstreamCompareCell{UpstreamID: u.ID, UpstreamName: u.Name}
+	cell := &UpstreamCompareCell{
+		UpstreamID:   col.UpstreamID,
+		GroupID:      col.GroupID,
+		UpstreamName: col.UpstreamName,
+	}
 
 	// 1. 台账价优先
-	if p := ledgerForModel[u.ID]; p != nil {
+	if p := ledgerForUpstream[ledgerGroupKey(col.GroupID)]; p != nil {
 		multiplier := 1.0
 		if p.RateMultiplier != nil && *p.RateMultiplier > 0 {
 			multiplier = *p.RateMultiplier
@@ -905,8 +994,19 @@ func (s *UpstreamService) buildCompareCell(
 		// 台账只有按次价（per_request）时不参与 token 比价，回落到推导
 	}
 
-	// 2. 目录价 × 该上游支持该模型的最低账号倍率
-	refs := accountsForModel[u.ID]
+	if col.Kind == UpstreamCompareColumnGroup {
+		// 2. 分组倍率推导：目录价 × upstream_groups.rate_multiplier
+		if col.RateMultiplier != nil && *col.RateMultiplier > 0 && officialInput != nil && *officialInput > 0 {
+			cell.RateMultiplier = col.RateMultiplier
+			cell.InputPricePerToken = scalePricePtr(officialInput, *col.RateMultiplier)
+			cell.Source = upstreamCompareSourceDerived
+			return cell
+		}
+		return nil
+	}
+
+	// 3. 综合列：该上游支持该模型的账号中最低倍率推导
+	refs := accountsForUpstream[col.UpstreamID]
 	if len(refs) == 0 {
 		return nil
 	}

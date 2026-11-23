@@ -121,6 +121,9 @@ describe('UpstreamCompareView', () => {
   it('renders a row even when the backend returns null cells', async () => {
     upstreamMocks.compare.mockResolvedValue({
       upstreams: [{ id: 1, name: 'Hualong' }],
+      columns: [
+        { upstream_id: 1, upstream_name: 'Hualong', group_id: 100, group_name: 'default', rate_multiplier: 0.48, kind: 'group' }
+      ],
       rows: [
         {
           model_name: 'claude-sonnet-4-5',
@@ -129,7 +132,8 @@ describe('UpstreamCompareView', () => {
           official_output_price_per_token: 1.5e-5,
           // 后端 nil slice 曾被序列化成 null：这里显式回归
           cells: null,
-          cheapest_upstream_id: null
+          cheapest_upstream_id: null,
+          cheapest_group_id: null
         }
       ]
     })
@@ -145,6 +149,10 @@ describe('UpstreamCompareView', () => {
   it('marks ledger-sourced cells and shows the rate multiplier', async () => {
     upstreamMocks.compare.mockResolvedValue({
       upstreams: [{ id: 1, name: 'Hualong' }],
+      columns: [
+        { upstream_id: 1, upstream_name: 'Hualong', group_id: 100, group_name: 'default', rate_multiplier: 0.48, kind: 'group' },
+        { upstream_id: 1, upstream_name: 'Hualong', group_id: null, group_name: '综合', rate_multiplier: null, kind: 'derived' }
+      ],
       rows: [
         {
           model_name: 'deepseek-v4-pro',
@@ -154,6 +162,7 @@ describe('UpstreamCompareView', () => {
           cells: [
             {
               upstream_id: 1,
+              group_id: 100,
               upstream_name: 'Hualong',
               input_price_per_token: 2.16e-7,
               output_price_per_token: null,
@@ -161,7 +170,8 @@ describe('UpstreamCompareView', () => {
               source: 'ledger'
             }
           ],
-          cheapest_upstream_id: null
+          cheapest_upstream_id: null,
+          cheapest_group_id: null
         }
       ]
     })
@@ -169,10 +179,13 @@ describe('UpstreamCompareView', () => {
     const wrapper = mount(UpstreamCompareView, { global: { stubs } })
     await flushPromises()
 
-    const cell = wrapper.find('[data-testid="upstream-compare-cell-1"]')
+    const cell = wrapper.find('[data-testid="upstream-compare-cell-1:100"]')
     expect(cell.exists()).toBe(true)
     expect(cell.text()).toContain('0.2160')
     expect(cell.text()).toContain('0.48')
     expect(cell.text()).toContain('admin.upstreams.compare.sourceLedger')
+    // 二级表头：第一级供应商 colspan、第二级分组名
+    expect(wrapper.text()).toContain('Hualong')
+    expect(wrapper.text()).toContain('default')
   })
 })

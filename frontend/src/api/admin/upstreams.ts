@@ -96,8 +96,18 @@ export interface UpstreamDetail extends Upstream {
   model_prices: UpstreamModelPrice[]
 }
 
+export interface UpstreamCompareColumn {
+  upstream_id: number
+  upstream_name: string
+  group_id: number | null
+  group_name: string
+  rate_multiplier: number | null
+  kind: 'group' | 'derived'
+}
+
 export interface UpstreamCompareCell {
   upstream_id: number
+  group_id: number | null
   upstream_name: string
   input_price_per_token: number | null
   output_price_per_token: number | null
@@ -114,10 +124,12 @@ export interface UpstreamCompareRow {
   official_output_price_per_token: number | null
   cells: UpstreamCompareCell[]
   cheapest_upstream_id: number | null
+  cheapest_group_id: number | null
 }
 
 export interface UpstreamCompareResult {
   upstreams: Upstream[]
+  columns: UpstreamCompareColumn[]
   rows: UpstreamCompareRow[]
 }
 

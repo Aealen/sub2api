@@ -132,6 +132,7 @@ export type {
   UpstreamDetail,
   UpstreamCompareResult,
   UpstreamCompareRow,
+  UpstreamCompareColumn,
   UpstreamCompareCell,
   UnassignedAccountHost,
   UpstreamInput,
