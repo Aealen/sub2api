@@ -2,8 +2,8 @@
   <div class="relative" ref="containerRef">
     <button
       type="button"
-      class="select-trigger"
-      :class="isOpen && 'select-trigger-open'"
+      class="trigger-btn"
+      :class="isOpen && 'trigger-btn-open'"
       :aria-expanded="isOpen"
       aria-haspopup="true"
       :data-testid="testId"
@@ -171,3 +171,21 @@ const onDocumentClick = (event: MouseEvent) => {
 onMounted(() => document.addEventListener('mousedown', onDocumentClick))
 onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick))
 </script>
+
+<style scoped>
+/* 与 Select.vue 的 .select-trigger 同款观感；那边是 scoped 无法复用 */
+.trigger-btn {
+  @apply flex w-full items-center justify-between gap-2;
+  @apply rounded-xl px-4 py-2.5 text-sm;
+  @apply bg-white dark:bg-dark-800;
+  @apply border border-gray-200 dark:border-dark-600;
+  @apply text-gray-900 dark:text-gray-100;
+  @apply transition-all duration-200;
+  @apply hover:border-gray-300 dark:hover:border-dark-500;
+  @apply cursor-pointer;
+}
+
+.trigger-btn-open {
+  @apply border-primary-500 ring-2 ring-primary-500/30;
+}
+</style>
