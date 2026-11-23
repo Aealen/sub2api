@@ -170,14 +170,21 @@ func (r *fakeSettingRepo) Get(_ context.Context, _ string) (*Setting, error) {
 func (r *fakeSettingRepo) Set(_ context.Context, _, _ string) error {
 	panic("fakeSettingRepo.Set not implemented")
 }
-func (r *fakeSettingRepo) GetMultiple(_ context.Context, _ []string) (map[string]string, error) {
-	panic("fakeSettingRepo.GetMultiple not implemented")
+func (r *fakeSettingRepo) GetMultiple(_ context.Context, keys []string) (map[string]string, error) {
+	out := make(map[string]string, len(keys))
+	for _, k := range keys {
+		out[k] = r.vals[k]
+	}
+	return out, nil
 }
-func (r *fakeSettingRepo) SetMultiple(_ context.Context, _ map[string]string) error {
-	panic("fakeSettingRepo.SetMultiple not implemented")
+func (r *fakeSettingRepo) SetMultiple(_ context.Context, settings map[string]string) error {
+	for k, v := range settings {
+		r.vals[k] = v
+	}
+	return nil
 }
 func (r *fakeSettingRepo) GetAll(_ context.Context) (map[string]string, error) {
-	panic("fakeSettingRepo.GetAll not implemented")
+	return r.vals, nil
 }
 func (r *fakeSettingRepo) Delete(_ context.Context, _ string) error {
 	panic("fakeSettingRepo.Delete not implemented")

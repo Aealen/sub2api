@@ -17,6 +17,18 @@
             @create="showCreate = true"
           >
             <template #after>
+              <!-- 上游余额预警配置 -->
+              <button
+                @click="
+                  showAccountToolsDropdown = false;
+                  showBalanceAlertConfig = true
+                "
+                class="btn btn-secondary px-2 md:px-3"
+                :title="t('admin.accounts.balance.configTitle')"
+                data-testid="balance-alert-config-button"
+              >
+                <span class="hidden md:inline">{{ t('admin.accounts.balance.configButton') }}</span>
+              </button>
               <!-- Auto Refresh Dropdown -->
               <div class="relative" ref="autoRefreshDropdownRef">
                 <button
@@ -396,6 +408,38 @@
               @probe="handleProbeUpstreamBilling(row)"
             />
           </template>
+          <template #cell-upstream_balance="{ row }">
+            <div class="flex flex-col gap-0.5">
+              <div class="flex items-center gap-1.5">
+                <span
+                  v-if="row.upstream_balance != null"
+                  class="text-sm font-mono font-semibold"
+                  :class="(row.balance_alert_threshold ?? globalBalanceAlertThreshold) != null && row.upstream_balance < (row.balance_alert_threshold ?? globalBalanceAlertThreshold)
+                    ? 'text-red-600 dark:text-red-400'
+                    : 'text-gray-700 dark:text-gray-300'"
+                >
+                  ${{ formatUpstreamBalance(row.upstream_balance) }}
+                </span>
+                <span v-else class="text-sm text-gray-400 dark:text-dark-500">-</span>
+                <button
+                  class="inline-flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50"
+                  :disabled="balanceRefreshing.has(row.id)"
+                  :title="t('admin.accounts.balance.refreshNow')"
+                  data-testid="account-balance-refresh"
+                  @click="handleRefreshBalance(row)"
+                >
+                  <Icon name="sync" size="xs" :class="{ 'animate-spin': balanceRefreshing.has(row.id) }" />
+                </button>
+              </div>
+              <span
+                v-if="row.upstream_balance_updated_at"
+                class="text-[11px]"
+                :class="balanceStale(row.upstream_balance_updated_at) ? 'text-gray-400 dark:text-dark-500 italic' : 'text-gray-400 dark:text-dark-500'"
+              >
+                {{ formatDateTime(row.upstream_balance_updated_at) }}
+              </span>
+            </div>
+          </template>
           <template #cell-priority="{ row }">
             <AccountPriorityCell
               :account="row"
@@ -473,6 +517,12 @@
       <template #pagination><Pagination v-if="pagination.total > 0" :page="pagination.page" :total="pagination.total" :page-size="pagination.page_size" @update:page="handlePageChange" @update:pageSize="handlePageSizeChange" /></template>
     </TablePageLayout>
     <CreateAccountModal :show="showCreate" :proxies="proxies" :groups="groups" @close="showCreate = false" @created="reload" />
+    <BalanceAlertConfigModal
+      :show="showBalanceAlertConfig"
+      :accounts="accounts"
+      @close="showBalanceAlertConfig = false"
+      @saved="handleBalanceAlertSaved"
+    />
     <EditAccountModal :show="showEdit" :account="edAcc" :proxies="proxies" :groups="groups" @close="showEdit = false" @updated="handleAccountUpdated" />
     <ReAuthAccountModal :show="showReAuth" :account="reAuthAcc" @close="closeReAuthModal" @reauthorized="handleAccountUpdated" />
     <AccountTestModal :show="showTest" :account="testingAcc" @close="closeTestModal" />
@@ -572,6 +622,7 @@ import AccountTodayStatsCell from '@/components/account/AccountTodayStatsCell.vu
 import AccountGroupsCell from '@/components/account/AccountGroupsCell.vue'
 import AccountCapacityCell from '@/components/account/AccountCapacityCell.vue'
 import UpstreamBillingRateCell from '@/components/account/UpstreamBillingRateCell.vue'
+import BalanceAlertConfigModal from '@/components/account/BalanceAlertConfigModal.vue'
 import AccountPriorityCell from '@/components/account/AccountPriorityCell.vue'
 import PlatformTypeBadge from '@/components/common/PlatformTypeBadge.vue'
 import Icon from '@/components/icons/Icon.vue'
@@ -674,6 +725,11 @@ const togglingSchedulable = ref<number | null>(null)
 const menu = reactive<{show:boolean, acc:Account|null, anchorRect:DOMRect|null}>({ show: false, acc: null, anchorRect: null })
 const exportingData = ref(false)
 const probingUpstreamBilling = reactive(new Set<number>())
+// 上游余额监控
+const showBalanceAlertConfig = ref(false)
+const balanceRefreshing = reactive(new Set<number>())
+// 全局默认预警阈值（预警配置弹窗保存后回填，用于余额列的低于阈值红色标识）
+const globalBalanceAlertThreshold = ref<number | null>(10)
 const upstreamBillingProbeGloballyEnabled = ref<boolean | undefined>(undefined)
 const upstreamBillingNow = ref(Date.now())
 const upstreamBillingRateETag = ref<string | null>(null)
@@ -1980,6 +2036,7 @@ const allColumns = computed(() => {
     { key: 'scheduler_score', label: t('admin.accounts.columns.schedulerScore'), sortable: false },
     { key: 'rate_multiplier', label: t('admin.accounts.columns.billingRateMultiplier'), sortable: true },
     { key: 'upstream_billing_rate', label: t('admin.accounts.columns.upstreamBillingRate'), sortable: true },
+    { key: 'upstream_balance', label: t('admin.accounts.columns.upstreamBalance'), sortable: false },
     { key: 'last_used_at', label: t('admin.accounts.columns.lastUsed'), sortable: true },
     { key: 'created_at', label: t('admin.accounts.columns.createdAt'), sortable: true },
     { key: 'expires_at', label: t('admin.accounts.columns.expiresAt'), sortable: true },
@@ -2430,6 +2487,40 @@ const patchUpstreamBillingSnapshot = (accountID: number, snapshot: UpstreamBilli
 const refreshAccountsAfterUpstreamBillingProbe = async () => {
   await refreshUpstreamBillingSortedList(true)
 }
+const formatUpstreamBalance = (value: number): string => value.toFixed(2)
+
+// 预警配置保存后：回填全局阈值（列表红色标识用）并刷新列表拿最新专属阈值
+const handleBalanceAlertSaved = (config?: { alert_threshold?: number }) => {
+  if (config && typeof config.alert_threshold === 'number') {
+    globalBalanceAlertThreshold.value = config.alert_threshold
+  }
+  void reload()
+}
+
+// 同步时间超过 24 小时视为过期（灰显斜体提示）
+const balanceStale = (updatedAt: string): boolean =>
+  Date.now() - new Date(updatedAt).getTime() > 24 * 60 * 60 * 1000
+
+const handleRefreshBalance = async (account: Account) => {
+  if (balanceRefreshing.has(account.id)) return
+  balanceRefreshing.add(account.id)
+  try {
+    const result = await adminAPI.accounts.refreshUpstreamBalance(account.id)
+    if (result.balance != null) {
+      account.upstream_balance = result.balance
+      account.upstream_balance_updated_at = new Date().toISOString()
+      appStore.showSuccess(t('admin.accounts.balance.refreshed', { balance: result.balance.toFixed(2) }))
+    } else {
+      appStore.showSuccess(t('admin.accounts.balance.refreshed'))
+    }
+  } catch (error) {
+    console.error('Failed to refresh upstream balance:', error)
+    appStore.showError(extractApiErrorMessage(error, t('admin.accounts.balance.refreshFailed')))
+  } finally {
+    balanceRefreshing.delete(account.id)
+  }
+}
+
 const handleProbeUpstreamBilling = async (account: Account) => {
   if (probingUpstreamBilling.has(account.id)) return
   probingUpstreamBilling.add(account.id)

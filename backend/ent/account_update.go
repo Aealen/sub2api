@@ -268,6 +268,80 @@ func (_u *AccountUpdate) AddRateMultiplier(v float64) *AccountUpdate {
 	return _u
 }
 
+// SetUpstreamBalance sets the "upstream_balance" field.
+func (_u *AccountUpdate) SetUpstreamBalance(v float64) *AccountUpdate {
+	_u.mutation.ResetUpstreamBalance()
+	_u.mutation.SetUpstreamBalance(v)
+	return _u
+}
+
+// SetNillableUpstreamBalance sets the "upstream_balance" field if the given value is not nil.
+func (_u *AccountUpdate) SetNillableUpstreamBalance(v *float64) *AccountUpdate {
+	if v != nil {
+		_u.SetUpstreamBalance(*v)
+	}
+	return _u
+}
+
+// AddUpstreamBalance adds value to the "upstream_balance" field.
+func (_u *AccountUpdate) AddUpstreamBalance(v float64) *AccountUpdate {
+	_u.mutation.AddUpstreamBalance(v)
+	return _u
+}
+
+// ClearUpstreamBalance clears the value of the "upstream_balance" field.
+func (_u *AccountUpdate) ClearUpstreamBalance() *AccountUpdate {
+	_u.mutation.ClearUpstreamBalance()
+	return _u
+}
+
+// SetUpstreamBalanceUpdatedAt sets the "upstream_balance_updated_at" field.
+func (_u *AccountUpdate) SetUpstreamBalanceUpdatedAt(v time.Time) *AccountUpdate {
+	_u.mutation.SetUpstreamBalanceUpdatedAt(v)
+	return _u
+}
+
+// SetNillableUpstreamBalanceUpdatedAt sets the "upstream_balance_updated_at" field if the given value is not nil.
+func (_u *AccountUpdate) SetNillableUpstreamBalanceUpdatedAt(v *time.Time) *AccountUpdate {
+	if v != nil {
+		_u.SetUpstreamBalanceUpdatedAt(*v)
+	}
+	return _u
+}
+
+// ClearUpstreamBalanceUpdatedAt clears the value of the "upstream_balance_updated_at" field.
+func (_u *AccountUpdate) ClearUpstreamBalanceUpdatedAt() *AccountUpdate {
+	_u.mutation.ClearUpstreamBalanceUpdatedAt()
+	return _u
+}
+
+// SetBalanceAlertThreshold sets the "balance_alert_threshold" field.
+func (_u *AccountUpdate) SetBalanceAlertThreshold(v float64) *AccountUpdate {
+	_u.mutation.ResetBalanceAlertThreshold()
+	_u.mutation.SetBalanceAlertThreshold(v)
+	return _u
+}
+
+// SetNillableBalanceAlertThreshold sets the "balance_alert_threshold" field if the given value is not nil.
+func (_u *AccountUpdate) SetNillableBalanceAlertThreshold(v *float64) *AccountUpdate {
+	if v != nil {
+		_u.SetBalanceAlertThreshold(*v)
+	}
+	return _u
+}
+
+// AddBalanceAlertThreshold adds value to the "balance_alert_threshold" field.
+func (_u *AccountUpdate) AddBalanceAlertThreshold(v float64) *AccountUpdate {
+	_u.mutation.AddBalanceAlertThreshold(v)
+	return _u
+}
+
+// ClearBalanceAlertThreshold clears the value of the "balance_alert_threshold" field.
+func (_u *AccountUpdate) ClearBalanceAlertThreshold() *AccountUpdate {
+	_u.mutation.ClearBalanceAlertThreshold()
+	return _u
+}
+
 // SetStatus sets the "status" field.
 func (_u *AccountUpdate) SetStatus(v string) *AccountUpdate {
 	_u.mutation.SetStatus(v)
@@ -868,6 +942,30 @@ func (_u *AccountUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.AddedRateMultiplier(); ok {
 		_spec.AddField(account.FieldRateMultiplier, field.TypeFloat64, value)
 	}
+	if value, ok := _u.mutation.UpstreamBalance(); ok {
+		_spec.SetField(account.FieldUpstreamBalance, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedUpstreamBalance(); ok {
+		_spec.AddField(account.FieldUpstreamBalance, field.TypeFloat64, value)
+	}
+	if _u.mutation.UpstreamBalanceCleared() {
+		_spec.ClearField(account.FieldUpstreamBalance, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.UpstreamBalanceUpdatedAt(); ok {
+		_spec.SetField(account.FieldUpstreamBalanceUpdatedAt, field.TypeTime, value)
+	}
+	if _u.mutation.UpstreamBalanceUpdatedAtCleared() {
+		_spec.ClearField(account.FieldUpstreamBalanceUpdatedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.BalanceAlertThreshold(); ok {
+		_spec.SetField(account.FieldBalanceAlertThreshold, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedBalanceAlertThreshold(); ok {
+		_spec.AddField(account.FieldBalanceAlertThreshold, field.TypeFloat64, value)
+	}
+	if _u.mutation.BalanceAlertThresholdCleared() {
+		_spec.ClearField(account.FieldBalanceAlertThreshold, field.TypeFloat64)
+	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(account.FieldStatus, field.TypeString, value)
 	}
@@ -1405,6 +1503,80 @@ func (_u *AccountUpdateOne) SetNillableRateMultiplier(v *float64) *AccountUpdate
 // AddRateMultiplier adds value to the "rate_multiplier" field.
 func (_u *AccountUpdateOne) AddRateMultiplier(v float64) *AccountUpdateOne {
 	_u.mutation.AddRateMultiplier(v)
+	return _u
+}
+
+// SetUpstreamBalance sets the "upstream_balance" field.
+func (_u *AccountUpdateOne) SetUpstreamBalance(v float64) *AccountUpdateOne {
+	_u.mutation.ResetUpstreamBalance()
+	_u.mutation.SetUpstreamBalance(v)
+	return _u
+}
+
+// SetNillableUpstreamBalance sets the "upstream_balance" field if the given value is not nil.
+func (_u *AccountUpdateOne) SetNillableUpstreamBalance(v *float64) *AccountUpdateOne {
+	if v != nil {
+		_u.SetUpstreamBalance(*v)
+	}
+	return _u
+}
+
+// AddUpstreamBalance adds value to the "upstream_balance" field.
+func (_u *AccountUpdateOne) AddUpstreamBalance(v float64) *AccountUpdateOne {
+	_u.mutation.AddUpstreamBalance(v)
+	return _u
+}
+
+// ClearUpstreamBalance clears the value of the "upstream_balance" field.
+func (_u *AccountUpdateOne) ClearUpstreamBalance() *AccountUpdateOne {
+	_u.mutation.ClearUpstreamBalance()
+	return _u
+}
+
+// SetUpstreamBalanceUpdatedAt sets the "upstream_balance_updated_at" field.
+func (_u *AccountUpdateOne) SetUpstreamBalanceUpdatedAt(v time.Time) *AccountUpdateOne {
+	_u.mutation.SetUpstreamBalanceUpdatedAt(v)
+	return _u
+}
+
+// SetNillableUpstreamBalanceUpdatedAt sets the "upstream_balance_updated_at" field if the given value is not nil.
+func (_u *AccountUpdateOne) SetNillableUpstreamBalanceUpdatedAt(v *time.Time) *AccountUpdateOne {
+	if v != nil {
+		_u.SetUpstreamBalanceUpdatedAt(*v)
+	}
+	return _u
+}
+
+// ClearUpstreamBalanceUpdatedAt clears the value of the "upstream_balance_updated_at" field.
+func (_u *AccountUpdateOne) ClearUpstreamBalanceUpdatedAt() *AccountUpdateOne {
+	_u.mutation.ClearUpstreamBalanceUpdatedAt()
+	return _u
+}
+
+// SetBalanceAlertThreshold sets the "balance_alert_threshold" field.
+func (_u *AccountUpdateOne) SetBalanceAlertThreshold(v float64) *AccountUpdateOne {
+	_u.mutation.ResetBalanceAlertThreshold()
+	_u.mutation.SetBalanceAlertThreshold(v)
+	return _u
+}
+
+// SetNillableBalanceAlertThreshold sets the "balance_alert_threshold" field if the given value is not nil.
+func (_u *AccountUpdateOne) SetNillableBalanceAlertThreshold(v *float64) *AccountUpdateOne {
+	if v != nil {
+		_u.SetBalanceAlertThreshold(*v)
+	}
+	return _u
+}
+
+// AddBalanceAlertThreshold adds value to the "balance_alert_threshold" field.
+func (_u *AccountUpdateOne) AddBalanceAlertThreshold(v float64) *AccountUpdateOne {
+	_u.mutation.AddBalanceAlertThreshold(v)
+	return _u
+}
+
+// ClearBalanceAlertThreshold clears the value of the "balance_alert_threshold" field.
+func (_u *AccountUpdateOne) ClearBalanceAlertThreshold() *AccountUpdateOne {
+	_u.mutation.ClearBalanceAlertThreshold()
 	return _u
 }
 
@@ -2037,6 +2209,30 @@ func (_u *AccountUpdateOne) sqlSave(ctx context.Context) (_node *Account, err er
 	}
 	if value, ok := _u.mutation.AddedRateMultiplier(); ok {
 		_spec.AddField(account.FieldRateMultiplier, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.UpstreamBalance(); ok {
+		_spec.SetField(account.FieldUpstreamBalance, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedUpstreamBalance(); ok {
+		_spec.AddField(account.FieldUpstreamBalance, field.TypeFloat64, value)
+	}
+	if _u.mutation.UpstreamBalanceCleared() {
+		_spec.ClearField(account.FieldUpstreamBalance, field.TypeFloat64)
+	}
+	if value, ok := _u.mutation.UpstreamBalanceUpdatedAt(); ok {
+		_spec.SetField(account.FieldUpstreamBalanceUpdatedAt, field.TypeTime, value)
+	}
+	if _u.mutation.UpstreamBalanceUpdatedAtCleared() {
+		_spec.ClearField(account.FieldUpstreamBalanceUpdatedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.BalanceAlertThreshold(); ok {
+		_spec.SetField(account.FieldBalanceAlertThreshold, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedBalanceAlertThreshold(); ok {
+		_spec.AddField(account.FieldBalanceAlertThreshold, field.TypeFloat64, value)
+	}
+	if _u.mutation.BalanceAlertThresholdCleared() {
+		_spec.ClearField(account.FieldBalanceAlertThreshold, field.TypeFloat64)
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(account.FieldStatus, field.TypeString, value)

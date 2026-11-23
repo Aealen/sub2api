@@ -1325,6 +1325,12 @@ export interface Account {
   notes?: string | null
   platform: AccountPlatform
   type: AccountType
+  /** 上游余额（转售站 /v1/usage，美元）；null = 尚未同步或上游不支持 */
+  upstream_balance?: number | null
+  /** 上游余额最后成功同步时间（ISO） */
+  upstream_balance_updated_at?: string | null
+  /** 专属余额预警阈值（美元）；null = 使用全局默认 */
+  balance_alert_threshold?: number | null
   // 后端响应里 credentials 已脱敏：access_token / refresh_token / id_token /
   // api_key / session_key / cookie / aws_secret_access_key / aws_session_token /
   // service_account_json / service_account / private_key 不会出现，

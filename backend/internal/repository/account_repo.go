@@ -3790,6 +3790,9 @@ func accountEntityToService(m *dbent.Account) *service.Account {
 		Priority:                m.Priority,
 		RateMultiplier:          &rateMultiplier,
 		LoadFactor:              m.LoadFactor,
+		UpstreamBalance:         m.UpstreamBalance,
+		UpstreamBalanceUpdatedAt: m.UpstreamBalanceUpdatedAt,
+		BalanceAlertThreshold:   m.BalanceAlertThreshold,
 		Status:                  m.Status,
 		ErrorMessage:            derefString(m.ErrorMessage),
 		LastUsedAt:              m.LastUsedAt,
@@ -4241,6 +4244,55 @@ func (r *accountRepository) ListShadowsByParent(ctx context.Context, parentID in
 	out := make([]*service.Account, 0, len(rows))
 	for _, m := range rows {
 		out = append(out, accountEntityToService(m))
+	}
+	return out, nil
+}
+
+// UpdateUpstreamBalance 仅更新上游余额与同步时间两列（轻量写，不走调度快照管道：
+// 余额不是调度数据）。由上游余额同步服务高频调用。
+func (r *accountRepository) UpdateUpstreamBalance(ctx context.Context, id int64, balance float64, at time.Time) error {
+	return r.client.Account.UpdateOneID(id).
+		SetUpstreamBalance(balance).
+		SetUpstreamBalanceUpdatedAt(at).
+		Exec(ctx)
+}
+
+// MergeAccountExtra 以 JSONB || 语义合并账号 extra（只覆盖 patch 里的键，
+// 不动其余键），用于上游余额预警状态标记等增量写。
+func (r *accountRepository) MergeAccountExtra(ctx context.Context, id int64, patch map[string]any) error {
+	payload, err := json.Marshal(patch)
+	if err != nil {
+		return err
+	}
+	_, err = r.sql.ExecContext(ctx,
+		"UPDATE accounts SET extra = extra || $1::jsonb, updated_at = now() WHERE id = $2 AND deleted_at IS NULL",
+		payload, id)
+	return err
+}
+
+// UpdateBalanceAlertThreshold 更新账号专属上游余额预警阈值；
+// threshold 为 nil 时清空该列（回落 settings 全局默认阈值）。
+func (r *accountRepository) UpdateBalanceAlertThreshold(ctx context.Context, id int64, threshold *float64) error {
+	upd := r.client.Account.UpdateOneID(id)
+	if threshold == nil {
+		upd.ClearBalanceAlertThreshold()
+	} else {
+		upd.SetBalanceAlertThreshold(*threshold)
+	}
+	return upd.Exec(ctx)
+}
+
+// ListAccountsWithAlertThreshold 列出设置了专属上游余额预警阈值的账号（全量）。
+func (r *accountRepository) ListAccountsWithAlertThreshold(ctx context.Context) ([]service.Account, error) {
+	rows, err := r.client.Account.Query().
+		Where(dbaccount.BalanceAlertThresholdNotNil()).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]service.Account, 0, len(rows))
+	for _, m := range rows {
+		out = append(out, *accountEntityToService(m))
 	}
 	return out, nil
 }

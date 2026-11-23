@@ -107,6 +107,8 @@ func TestAccountReadableSnapshot_DenylistTripwire(t *testing.T) {
 		"KiroQuotaState": {}, "KiroQuotaReason": {}, "KiroQuotaResetAt": {},
 		"KiroRuntimeState": {}, "KiroRuntimeReason": {}, "KiroRuntimeResetAt": {},
 		"ParentAccountID": {}, "QuotaDimension": {}, "GroupIDs": {},
+		// 上游余额监控：余额/同步时间/专属预警阈值均为非敏感可读元数据。
+		"UpstreamBalance": {}, "UpstreamBalanceUpdatedAt": {}, "BalanceAlertThreshold": {},
 	}
 	tp := reflect.TypeOf(Account{})
 	for i := 0; i < tp.NumField(); i++ {

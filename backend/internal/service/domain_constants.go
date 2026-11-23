@@ -747,6 +747,12 @@ const (
 	SettingKeyAccountQuotaNotifyEnabled = "account_quota_notify_enabled" // 全局开关
 	SettingKeyAccountQuotaNotifyEmails  = "account_quota_notify_emails"  // 管理员通知邮箱列表（JSON 数组）
 
+	// 上游余额监控（转售站 GET {base_url}/v1/usage）
+	SettingKeyUpstreamBalanceSyncIntervalSeconds = "upstream_balance_sync_interval_seconds" // 同步间隔秒数，默认 600
+	SettingKeyUpstreamBalanceAlertEnabled        = "upstream_balance_alert_enabled"         // 预警开关，默认 true
+	SettingKeyUpstreamBalanceAlertEmails         = "upstream_balance_alert_emails"          // 预警邮箱列表（JSON 数组，NotifyEmailEntry）
+	SettingKeyUpstreamBalanceAlertThreshold      = "upstream_balance_alert_threshold"       // 全局默认预警阈值（美元），账号专属阈值用 accounts.balance_alert_threshold
+
 	// Web Search Emulation
 	SettingKeyWebSearchEmulationConfig = "web_search_emulation_config" // JSON 配置
 )

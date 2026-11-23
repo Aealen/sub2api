@@ -2306,6 +2306,11 @@ type AccountMutation struct {
 	addpriority                 *int
 	rate_multiplier             *float64
 	addrate_multiplier          *float64
+	upstream_balance            *float64
+	addupstream_balance         *float64
+	upstream_balance_updated_at *time.Time
+	balance_alert_threshold     *float64
+	addbalance_alert_threshold  *float64
 	status                      *string
 	error_message               *string
 	last_used_at                *time.Time
@@ -3143,6 +3148,195 @@ func (m *AccountMutation) AddedRateMultiplier() (r float64, exists bool) {
 func (m *AccountMutation) ResetRateMultiplier() {
 	m.rate_multiplier = nil
 	m.addrate_multiplier = nil
+}
+
+// SetUpstreamBalance sets the "upstream_balance" field.
+func (m *AccountMutation) SetUpstreamBalance(f float64) {
+	m.upstream_balance = &f
+	m.addupstream_balance = nil
+}
+
+// UpstreamBalance returns the value of the "upstream_balance" field in the mutation.
+func (m *AccountMutation) UpstreamBalance() (r float64, exists bool) {
+	v := m.upstream_balance
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpstreamBalance returns the old "upstream_balance" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountMutation) OldUpstreamBalance(ctx context.Context) (v *float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpstreamBalance is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpstreamBalance requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpstreamBalance: %w", err)
+	}
+	return oldValue.UpstreamBalance, nil
+}
+
+// AddUpstreamBalance adds f to the "upstream_balance" field.
+func (m *AccountMutation) AddUpstreamBalance(f float64) {
+	if m.addupstream_balance != nil {
+		*m.addupstream_balance += f
+	} else {
+		m.addupstream_balance = &f
+	}
+}
+
+// AddedUpstreamBalance returns the value that was added to the "upstream_balance" field in this mutation.
+func (m *AccountMutation) AddedUpstreamBalance() (r float64, exists bool) {
+	v := m.addupstream_balance
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearUpstreamBalance clears the value of the "upstream_balance" field.
+func (m *AccountMutation) ClearUpstreamBalance() {
+	m.upstream_balance = nil
+	m.addupstream_balance = nil
+	m.clearedFields[account.FieldUpstreamBalance] = struct{}{}
+}
+
+// UpstreamBalanceCleared returns if the "upstream_balance" field was cleared in this mutation.
+func (m *AccountMutation) UpstreamBalanceCleared() bool {
+	_, ok := m.clearedFields[account.FieldUpstreamBalance]
+	return ok
+}
+
+// ResetUpstreamBalance resets all changes to the "upstream_balance" field.
+func (m *AccountMutation) ResetUpstreamBalance() {
+	m.upstream_balance = nil
+	m.addupstream_balance = nil
+	delete(m.clearedFields, account.FieldUpstreamBalance)
+}
+
+// SetUpstreamBalanceUpdatedAt sets the "upstream_balance_updated_at" field.
+func (m *AccountMutation) SetUpstreamBalanceUpdatedAt(t time.Time) {
+	m.upstream_balance_updated_at = &t
+}
+
+// UpstreamBalanceUpdatedAt returns the value of the "upstream_balance_updated_at" field in the mutation.
+func (m *AccountMutation) UpstreamBalanceUpdatedAt() (r time.Time, exists bool) {
+	v := m.upstream_balance_updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpstreamBalanceUpdatedAt returns the old "upstream_balance_updated_at" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountMutation) OldUpstreamBalanceUpdatedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpstreamBalanceUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpstreamBalanceUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpstreamBalanceUpdatedAt: %w", err)
+	}
+	return oldValue.UpstreamBalanceUpdatedAt, nil
+}
+
+// ClearUpstreamBalanceUpdatedAt clears the value of the "upstream_balance_updated_at" field.
+func (m *AccountMutation) ClearUpstreamBalanceUpdatedAt() {
+	m.upstream_balance_updated_at = nil
+	m.clearedFields[account.FieldUpstreamBalanceUpdatedAt] = struct{}{}
+}
+
+// UpstreamBalanceUpdatedAtCleared returns if the "upstream_balance_updated_at" field was cleared in this mutation.
+func (m *AccountMutation) UpstreamBalanceUpdatedAtCleared() bool {
+	_, ok := m.clearedFields[account.FieldUpstreamBalanceUpdatedAt]
+	return ok
+}
+
+// ResetUpstreamBalanceUpdatedAt resets all changes to the "upstream_balance_updated_at" field.
+func (m *AccountMutation) ResetUpstreamBalanceUpdatedAt() {
+	m.upstream_balance_updated_at = nil
+	delete(m.clearedFields, account.FieldUpstreamBalanceUpdatedAt)
+}
+
+// SetBalanceAlertThreshold sets the "balance_alert_threshold" field.
+func (m *AccountMutation) SetBalanceAlertThreshold(f float64) {
+	m.balance_alert_threshold = &f
+	m.addbalance_alert_threshold = nil
+}
+
+// BalanceAlertThreshold returns the value of the "balance_alert_threshold" field in the mutation.
+func (m *AccountMutation) BalanceAlertThreshold() (r float64, exists bool) {
+	v := m.balance_alert_threshold
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBalanceAlertThreshold returns the old "balance_alert_threshold" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AccountMutation) OldBalanceAlertThreshold(ctx context.Context) (v *float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBalanceAlertThreshold is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBalanceAlertThreshold requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBalanceAlertThreshold: %w", err)
+	}
+	return oldValue.BalanceAlertThreshold, nil
+}
+
+// AddBalanceAlertThreshold adds f to the "balance_alert_threshold" field.
+func (m *AccountMutation) AddBalanceAlertThreshold(f float64) {
+	if m.addbalance_alert_threshold != nil {
+		*m.addbalance_alert_threshold += f
+	} else {
+		m.addbalance_alert_threshold = &f
+	}
+}
+
+// AddedBalanceAlertThreshold returns the value that was added to the "balance_alert_threshold" field in this mutation.
+func (m *AccountMutation) AddedBalanceAlertThreshold() (r float64, exists bool) {
+	v := m.addbalance_alert_threshold
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearBalanceAlertThreshold clears the value of the "balance_alert_threshold" field.
+func (m *AccountMutation) ClearBalanceAlertThreshold() {
+	m.balance_alert_threshold = nil
+	m.addbalance_alert_threshold = nil
+	m.clearedFields[account.FieldBalanceAlertThreshold] = struct{}{}
+}
+
+// BalanceAlertThresholdCleared returns if the "balance_alert_threshold" field was cleared in this mutation.
+func (m *AccountMutation) BalanceAlertThresholdCleared() bool {
+	_, ok := m.clearedFields[account.FieldBalanceAlertThreshold]
+	return ok
+}
+
+// ResetBalanceAlertThreshold resets all changes to the "balance_alert_threshold" field.
+func (m *AccountMutation) ResetBalanceAlertThreshold() {
+	m.balance_alert_threshold = nil
+	m.addbalance_alert_threshold = nil
+	delete(m.clearedFields, account.FieldBalanceAlertThreshold)
 }
 
 // SetStatus sets the "status" field.
@@ -4140,7 +4334,7 @@ func (m *AccountMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *AccountMutation) Fields() []string {
-	fields := make([]string, 0, 31)
+	fields := make([]string, 0, 34)
 	if m.created_at != nil {
 		fields = append(fields, account.FieldCreatedAt)
 	}
@@ -4185,6 +4379,15 @@ func (m *AccountMutation) Fields() []string {
 	}
 	if m.rate_multiplier != nil {
 		fields = append(fields, account.FieldRateMultiplier)
+	}
+	if m.upstream_balance != nil {
+		fields = append(fields, account.FieldUpstreamBalance)
+	}
+	if m.upstream_balance_updated_at != nil {
+		fields = append(fields, account.FieldUpstreamBalanceUpdatedAt)
+	}
+	if m.balance_alert_threshold != nil {
+		fields = append(fields, account.FieldBalanceAlertThreshold)
 	}
 	if m.status != nil {
 		fields = append(fields, account.FieldStatus)
@@ -4272,6 +4475,12 @@ func (m *AccountMutation) Field(name string) (ent.Value, bool) {
 		return m.Priority()
 	case account.FieldRateMultiplier:
 		return m.RateMultiplier()
+	case account.FieldUpstreamBalance:
+		return m.UpstreamBalance()
+	case account.FieldUpstreamBalanceUpdatedAt:
+		return m.UpstreamBalanceUpdatedAt()
+	case account.FieldBalanceAlertThreshold:
+		return m.BalanceAlertThreshold()
 	case account.FieldStatus:
 		return m.Status()
 	case account.FieldErrorMessage:
@@ -4343,6 +4552,12 @@ func (m *AccountMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldPriority(ctx)
 	case account.FieldRateMultiplier:
 		return m.OldRateMultiplier(ctx)
+	case account.FieldUpstreamBalance:
+		return m.OldUpstreamBalance(ctx)
+	case account.FieldUpstreamBalanceUpdatedAt:
+		return m.OldUpstreamBalanceUpdatedAt(ctx)
+	case account.FieldBalanceAlertThreshold:
+		return m.OldBalanceAlertThreshold(ctx)
 	case account.FieldStatus:
 		return m.OldStatus(ctx)
 	case account.FieldErrorMessage:
@@ -4489,6 +4704,27 @@ func (m *AccountMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetRateMultiplier(v)
 		return nil
+	case account.FieldUpstreamBalance:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpstreamBalance(v)
+		return nil
+	case account.FieldUpstreamBalanceUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpstreamBalanceUpdatedAt(v)
+		return nil
+	case account.FieldBalanceAlertThreshold:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBalanceAlertThreshold(v)
+		return nil
 	case account.FieldStatus:
 		v, ok := value.(string)
 		if !ok {
@@ -4624,6 +4860,12 @@ func (m *AccountMutation) AddedFields() []string {
 	if m.addrate_multiplier != nil {
 		fields = append(fields, account.FieldRateMultiplier)
 	}
+	if m.addupstream_balance != nil {
+		fields = append(fields, account.FieldUpstreamBalance)
+	}
+	if m.addbalance_alert_threshold != nil {
+		fields = append(fields, account.FieldBalanceAlertThreshold)
+	}
 	return fields
 }
 
@@ -4642,6 +4884,10 @@ func (m *AccountMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedPriority()
 	case account.FieldRateMultiplier:
 		return m.AddedRateMultiplier()
+	case account.FieldUpstreamBalance:
+		return m.AddedUpstreamBalance()
+	case account.FieldBalanceAlertThreshold:
+		return m.AddedBalanceAlertThreshold()
 	}
 	return nil, false
 }
@@ -4686,6 +4932,20 @@ func (m *AccountMutation) AddField(name string, value ent.Value) error {
 		}
 		m.AddRateMultiplier(v)
 		return nil
+	case account.FieldUpstreamBalance:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUpstreamBalance(v)
+		return nil
+	case account.FieldBalanceAlertThreshold:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddBalanceAlertThreshold(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Account numeric field %s", name)
 }
@@ -4708,6 +4968,15 @@ func (m *AccountMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(account.FieldLoadFactor) {
 		fields = append(fields, account.FieldLoadFactor)
+	}
+	if m.FieldCleared(account.FieldUpstreamBalance) {
+		fields = append(fields, account.FieldUpstreamBalance)
+	}
+	if m.FieldCleared(account.FieldUpstreamBalanceUpdatedAt) {
+		fields = append(fields, account.FieldUpstreamBalanceUpdatedAt)
+	}
+	if m.FieldCleared(account.FieldBalanceAlertThreshold) {
+		fields = append(fields, account.FieldBalanceAlertThreshold)
 	}
 	if m.FieldCleared(account.FieldErrorMessage) {
 		fields = append(fields, account.FieldErrorMessage)
@@ -4773,6 +5042,15 @@ func (m *AccountMutation) ClearField(name string) error {
 		return nil
 	case account.FieldLoadFactor:
 		m.ClearLoadFactor()
+		return nil
+	case account.FieldUpstreamBalance:
+		m.ClearUpstreamBalance()
+		return nil
+	case account.FieldUpstreamBalanceUpdatedAt:
+		m.ClearUpstreamBalanceUpdatedAt()
+		return nil
+	case account.FieldBalanceAlertThreshold:
+		m.ClearBalanceAlertThreshold()
 		return nil
 	case account.FieldErrorMessage:
 		m.ClearErrorMessage()
@@ -4862,6 +5140,15 @@ func (m *AccountMutation) ResetField(name string) error {
 		return nil
 	case account.FieldRateMultiplier:
 		m.ResetRateMultiplier()
+		return nil
+	case account.FieldUpstreamBalance:
+		m.ResetUpstreamBalance()
+		return nil
+	case account.FieldUpstreamBalanceUpdatedAt:
+		m.ResetUpstreamBalanceUpdatedAt()
+		return nil
+	case account.FieldBalanceAlertThreshold:
+		m.ResetBalanceAlertThreshold()
 		return nil
 	case account.FieldStatus:
 		m.ResetStatus()

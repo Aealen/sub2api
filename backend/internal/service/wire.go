@@ -973,6 +973,7 @@ var ProviderSet = wire.NewSet(
 	ProvideFishQuotaSweepService,
 	ProvideAccountTestService,
 	ProvideUpstreamBillingProbeService,
+	ProvideUpstreamBalanceService,
 	ProvideIQCheckService,
 	ProvideOllamaCloudUsageService,
 	ProvideOpenCodeGoUsageService,
