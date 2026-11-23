@@ -115,6 +115,9 @@ export const useAnnouncementStore = defineStore('announcements', () => {
       }))
       const failure = results.find((result) => result.status === 'rejected')
       if (failure) throw failure.reason
+      // 全部已读后不该再逐条弹出：清空待展示队列并关闭当前弹窗
+      popupQueue.value = []
+      currentPopup.value = null
     } catch (err: any) {
       console.error('Failed to mark all as read:', err)
       throw err

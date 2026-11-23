@@ -1252,13 +1252,25 @@ export interface UpstreamBalanceThresholdOverride {
   threshold: number
 }
 
-/** 读取上游余额监控全局配置（含专属阈值覆盖列表） */
-export async function getUpstreamBalanceConfig(): Promise<
-  UpstreamBalanceConfig & { per_account_thresholds?: UpstreamBalanceThresholdOverride[] }
-> {
-  const { data } = await apiClient.get<
-    UpstreamBalanceConfig & { per_account_thresholds?: UpstreamBalanceThresholdOverride[] }
-  >('/admin/accounts/upstream-balance/config')
+/** 预警配置弹窗的账号下拉项（可同步上游余额的全部账号，不限状态、不分页） */
+export interface UpstreamBalanceAccountOption {
+  id: number
+  name: string
+  platform: string
+  status: string
+  upstream_balance: number | null
+}
+
+/** GET 配置接口的响应：与后端 gin.H{"config","per_account_thresholds","accounts"} 一一对应 */
+export interface UpstreamBalanceConfigResponse {
+  config: UpstreamBalanceConfig
+  per_account_thresholds: UpstreamBalanceThresholdOverride[]
+  accounts: UpstreamBalanceAccountOption[]
+}
+
+/** 读取预警配置弹窗所需的全部数据（全局配置 + 专属阈值 + 可选账号） */
+export async function getUpstreamBalanceConfig(): Promise<UpstreamBalanceConfigResponse> {
+  const { data } = await apiClient.get<UpstreamBalanceConfigResponse>('/admin/accounts/upstream-balance/config')
   return data
 }
 
@@ -1282,10 +1294,3 @@ export async function refreshUpstreamBalance(accountId?: number): Promise<{ acco
 export async function setAccountBalanceAlertThreshold(id: number, threshold: number | null): Promise<void> {
   await apiClient.put(`/admin/accounts/${id}/balance-alert-threshold`, { threshold })
 }
-
-Object.assign(accountsAPI, {
-  getUpstreamBalanceConfig,
-  updateUpstreamBalanceConfig,
-  refreshUpstreamBalance,
-  setAccountBalanceAlertThreshold
-})

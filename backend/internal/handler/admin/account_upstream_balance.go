@@ -13,7 +13,8 @@ type upstreamBalanceRefreshRequest struct {
 	AccountID *int64 `json:"account_id"`
 }
 
-// GetUpstreamBalanceConfig 读取上游余额监控全局配置（预警配置弹窗打开时）。
+// GetUpstreamBalanceConfig 返回预警配置弹窗所需的全部数据：
+// 全局配置、已设置的账号专属阈值、可同步余额的全部账号（账号下拉用）。
 func (h *AccountHandler) GetUpstreamBalanceConfig(c *gin.Context) {
 	if h.upstreamBalance == nil {
 		response.ErrorFrom(c, service.ErrUpstreamBalanceUnavailable)
@@ -29,7 +30,16 @@ func (h *AccountHandler) GetUpstreamBalanceConfig(c *gin.Context) {
 		response.ErrorFrom(c, err)
 		return
 	}
-	response.Success(c, gin.H{"config": cfg, "per_account_thresholds": overrides})
+	accounts, err := h.upstreamBalance.ListEligibleAccounts(c.Request.Context())
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, gin.H{
+		"config":                 cfg,
+		"per_account_thresholds": overrides,
+		"accounts":               accounts,
+	})
 }
 
 // UpdateUpstreamBalanceConfig 保存上游余额监控全局配置。

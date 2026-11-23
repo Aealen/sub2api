@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -61,6 +62,14 @@ type UpstreamBalanceAccountStore interface {
 	UpdateBalanceAlertThreshold(ctx context.Context, id int64, threshold *float64) error
 	// ListAccountsWithAlertThreshold 列出设置了专属预警阈值的账号（全量，跨分页）。
 	ListAccountsWithAlertThreshold(ctx context.Context) ([]Account, error)
+	// ListAllWithFilters 不分页列出账号（预警配置弹窗的账号下拉用）。
+	ListAllWithFilters(ctx context.Context, platform, accountType, status, search string, groupID int64, privacyMode string) ([]Account, error)
+}
+
+// upstreamBalanceSyncable 判定账号能否同步上游余额：apikey 型且配置了 base_url 与 api_key。
+// SyncAll / SyncAccount / ListEligibleAccounts 共用，保证下拉可选与实际同步同一口径。
+func upstreamBalanceSyncable(a *Account) bool {
+	return a != nil && a.Type == AccountTypeAPIKey && a.GetBaseURL() != "" && a.GetCredential("api_key") != ""
 }
 
 // UpstreamBalanceService 定期拉取转售站账号的上游余额（GET {base_url}/v1/usage），
@@ -228,10 +237,10 @@ func (s *UpstreamBalanceService) LoadConfig(ctx context.Context) (UpstreamBalanc
 // SaveConfig 保存全局配置（预警配置弹窗保存）。
 func (s *UpstreamBalanceService) SaveConfig(ctx context.Context, cfg UpstreamBalanceConfig) error {
 	if cfg.SyncIntervalSeconds <= 0 {
-		return fmt.Errorf("sync_interval_seconds must be positive")
+		return infraerrors.BadRequest("UPSTREAM_BALANCE_INTERVAL_INVALID", "sync_interval_seconds must be positive")
 	}
 	if cfg.AlertThreshold < 0 {
-		return fmt.Errorf("alert_threshold must be >= 0")
+		return infraerrors.BadRequest("UPSTREAM_BALANCE_THRESHOLD_INVALID", "alert_threshold must be >= 0")
 	}
 	emails := make([]string, 0, len(cfg.AlertEmails))
 	for _, e := range cfg.AlertEmails {
@@ -274,7 +283,7 @@ func (s *UpstreamBalanceService) SyncAll(ctx context.Context) {
 	targets := make([]*Account, 0, len(accounts))
 	for i := range accounts {
 		a := &accounts[i]
-		if a.Type != AccountTypeAPIKey || a.GetBaseURL() == "" || a.GetCredential("api_key") == "" {
+		if !upstreamBalanceSyncable(a) {
 			continue
 		}
 		targets = append(targets, a)
@@ -308,7 +317,7 @@ func (s *UpstreamBalanceService) SyncAccount(ctx context.Context, id int64) (*fl
 	if err != nil {
 		return nil, err
 	}
-	if account.Type != AccountTypeAPIKey || account.GetBaseURL() == "" || account.GetCredential("api_key") == "" {
+	if !upstreamBalanceSyncable(account) {
 		return nil, fmt.Errorf("account %d is not an apikey account with base_url/api_key", id)
 	}
 	cfg, cfgErr := s.LoadConfig(ctx)
@@ -479,6 +488,40 @@ func parseFloatDefault(v string, fallback float64) float64 {
 		return fallback
 	}
 	return f
+}
+
+// UpstreamBalanceAccountOption 预警配置弹窗的账号下拉项（可同步上游余额的账号）。
+type UpstreamBalanceAccountOption struct {
+	ID              int64    `json:"id"`
+	Name            string   `json:"name"`
+	Platform        string   `json:"platform"`
+	Status          string   `json:"status"`
+	UpstreamBalance *float64 `json:"upstream_balance"`
+}
+
+// ListEligibleAccounts 列出可同步上游余额的全部账号（不分页、不限状态），
+// 供预警配置弹窗的账号下拉使用，避免下拉只含列表页当前页的账号。
+func (s *UpstreamBalanceService) ListEligibleAccounts(ctx context.Context) ([]UpstreamBalanceAccountOption, error) {
+	accounts, err := s.accountRepo.ListAllWithFilters(ctx, "", AccountTypeAPIKey, "", "", 0, "")
+	if err != nil {
+		return nil, err
+	}
+	out := make([]UpstreamBalanceAccountOption, 0, len(accounts))
+	for i := range accounts {
+		a := &accounts[i]
+		if !upstreamBalanceSyncable(a) {
+			continue
+		}
+		out = append(out, UpstreamBalanceAccountOption{
+			ID:              a.ID,
+			Name:            a.Name,
+			Platform:        a.Platform,
+			Status:          a.Status,
+			UpstreamBalance: a.UpstreamBalance,
+		})
+	}
+	sort.SliceStable(out, func(i, j int) bool { return out[i].Name < out[j].Name })
+	return out, nil
 }
 
 // ProvideUpstreamBalanceService wire 注入构造器。

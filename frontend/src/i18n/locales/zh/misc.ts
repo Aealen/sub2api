@@ -95,6 +95,7 @@ export default {
     viewAll: '查看全部公告',
     markedAsRead: '已标记为已读',
     allMarkedAsRead: '所有公告已标记为已读',
+    unreadRemaining: '还有 {count} 条未读公告',
     newCount: '有 {count} 条新公告',
     readAt: '已读时间',
     read: '已读',

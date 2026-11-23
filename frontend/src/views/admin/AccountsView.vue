@@ -414,9 +414,7 @@
                 <span
                   v-if="row.upstream_balance != null"
                   class="text-sm font-mono font-semibold"
-                  :class="(row.balance_alert_threshold ?? globalBalanceAlertThreshold) != null && row.upstream_balance < (row.balance_alert_threshold ?? globalBalanceAlertThreshold)
-                    ? 'text-red-600 dark:text-red-400'
-                    : 'text-gray-700 dark:text-gray-300'"
+                  :class="balanceBelowThreshold(row) ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'"
                 >
                   ${{ formatUpstreamBalance(row.upstream_balance) }}
                 </span>
@@ -519,7 +517,6 @@
     <CreateAccountModal :show="showCreate" :proxies="proxies" :groups="groups" @close="showCreate = false" @created="reload" />
     <BalanceAlertConfigModal
       :show="showBalanceAlertConfig"
-      :accounts="accounts"
       @close="showBalanceAlertConfig = false"
       @saved="handleBalanceAlertSaved"
     />
@@ -623,6 +620,7 @@ import AccountGroupsCell from '@/components/account/AccountGroupsCell.vue'
 import AccountCapacityCell from '@/components/account/AccountCapacityCell.vue'
 import UpstreamBillingRateCell from '@/components/account/UpstreamBillingRateCell.vue'
 import BalanceAlertConfigModal from '@/components/account/BalanceAlertConfigModal.vue'
+import type { UpstreamBalanceConfig } from '@/api/admin/accounts'
 import AccountPriorityCell from '@/components/account/AccountPriorityCell.vue'
 import PlatformTypeBadge from '@/components/common/PlatformTypeBadge.vue'
 import Icon from '@/components/icons/Icon.vue'
@@ -728,8 +726,8 @@ const probingUpstreamBilling = reactive(new Set<number>())
 // 上游余额监控
 const showBalanceAlertConfig = ref(false)
 const balanceRefreshing = reactive(new Set<number>())
-// 全局默认预警阈值（预警配置弹窗保存后回填，用于余额列的低于阈值红色标识）
-const globalBalanceAlertThreshold = ref<number | null>(10)
+// 全局默认预警阈值（页面挂载时从配置接口加载，用于余额列的低于阈值红色标识）
+const globalBalanceAlertThreshold = ref<number | null>(null)
 const upstreamBillingProbeGloballyEnabled = ref<boolean | undefined>(undefined)
 const upstreamBillingNow = ref(Date.now())
 const upstreamBillingRateETag = ref<string | null>(null)
@@ -2489,11 +2487,26 @@ const refreshAccountsAfterUpstreamBillingProbe = async () => {
 }
 const formatUpstreamBalance = (value: number): string => value.toFixed(2)
 
-// 预警配置保存后：回填全局阈值（列表红色标识用）并刷新列表拿最新专属阈值
-const handleBalanceAlertSaved = (config?: { alert_threshold?: number }) => {
-  if (config && typeof config.alert_threshold === 'number') {
-    globalBalanceAlertThreshold.value = config.alert_threshold
+// 生效阈值：账号专属优先，否则全局默认（页面挂载时从配置接口加载）
+const balanceBelowThreshold = (account: Account): boolean => {
+  if (account.upstream_balance == null) return false
+  const threshold = account.balance_alert_threshold ?? globalBalanceAlertThreshold.value
+  return threshold != null && account.upstream_balance < threshold
+}
+
+const loadGlobalBalanceAlertThreshold = async () => {
+  try {
+    const resp = await adminAPI.accounts.getUpstreamBalanceConfig()
+    globalBalanceAlertThreshold.value = resp.config.alert_threshold
+  } catch (error) {
+    // 拿不到全局阈值时不标红（专属阈值仍生效），不影响列表页其余功能
+    console.warn('Failed to load upstream balance alert config:', error)
   }
+}
+
+// 预警配置保存后：回填全局阈值（列表红色标识用）并刷新列表拿最新专属阈值
+const handleBalanceAlertSaved = (config: UpstreamBalanceConfig) => {
+  globalBalanceAlertThreshold.value = config.alert_threshold
   void reload()
 }
 
@@ -2510,8 +2523,6 @@ const handleRefreshBalance = async (account: Account) => {
       account.upstream_balance = result.balance
       account.upstream_balance_updated_at = new Date().toISOString()
       appStore.showSuccess(t('admin.accounts.balance.refreshed', { balance: result.balance.toFixed(2) }))
-    } else {
-      appStore.showSuccess(t('admin.accounts.balance.refreshed'))
     }
   } catch (error) {
     console.error('Failed to refresh upstream balance:', error)
@@ -2823,6 +2834,7 @@ onMounted(async () => {
 
   load()
   loadUpstreamBillingProbeGlobalState()
+  void loadGlobalBalanceAlertThreshold()
   const [proxiesResult, groupsResult] = await Promise.allSettled([
     adminAPI.proxies.getAll(),
     adminAPI.groups.getAll()

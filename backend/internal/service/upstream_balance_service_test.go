@@ -62,6 +62,14 @@ func (f *fakeUpstreamBalanceStore) ListAccountsWithAlertThreshold(_ context.Cont
 	return nil, nil
 }
 
+func (f *fakeUpstreamBalanceStore) ListAllWithFilters(_ context.Context, _, _, _, _ string, _ int64, _ string) ([]Account, error) {
+	out := make([]Account, 0, len(f.accounts))
+	for _, a := range f.accounts {
+		out = append(out, *a)
+	}
+	return out, nil
+}
+
 func kiroBalanceTestAccount(id int64, balance float64) *Account {
 	return &Account{
 		ID:       id,
@@ -279,4 +287,31 @@ func TestUpstreamBalanceService_SaveConfig(t *testing.T) {
 			t.Fatal("expected error for negative threshold")
 		}
 	})
+}
+
+func TestUpstreamBalanceService_ListEligibleAccounts(t *testing.T) {
+	store := newFakeUpstreamBalanceStore()
+	store.accounts[1] = kiroBalanceTestAccount(1, 8) // apikey + base_url + api_key：可选
+
+	// 缺 api_key：不可选
+	noKey := kiroBalanceTestAccount(2, 9)
+	noKey.Credentials = map[string]any{"base_url": "https://upstream.example"}
+	store.accounts[2] = noKey
+
+	// 非 apikey 型（oauth）：不可选
+	oauth := kiroBalanceTestAccount(3, 9)
+	oauth.Type = AccountTypeOAuth
+	store.accounts[3] = oauth
+
+	s := NewUpstreamBalanceService(store, nil, nil, nil)
+	got, err := s.ListEligibleAccounts(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 || got[0].ID != 1 {
+		t.Fatalf("eligible = %+v, want only account 1", got)
+	}
+	if got[0].UpstreamBalance == nil || *got[0].UpstreamBalance != 8 {
+		t.Fatalf("balance not carried: %+v", got[0])
+	}
 }
