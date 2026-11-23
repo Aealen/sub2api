@@ -29,6 +29,7 @@ import scheduledTestsAPI from './scheduledTests'
 import backupAPI from './backup'
 import tlsFingerprintProfileAPI from './tlsFingerprintProfile'
 import channelsAPI from './channels'
+import upstreamsAPI from './upstreams'
 import channelMonitorAPI from './channelMonitor'
 import channelMonitorTemplateAPI from './channelMonitorTemplate'
 import adminPaymentAPI from './payment'
@@ -68,6 +69,7 @@ export const adminAPI = {
   backup: backupAPI,
   tlsFingerprintProfiles: tlsFingerprintProfileAPI,
   channels: channelsAPI,
+  upstreams: upstreamsAPI,
   channelMonitor: channelMonitorAPI,
   channelMonitorTemplate: channelMonitorTemplateAPI,
   payment: adminPaymentAPI,
@@ -105,6 +107,7 @@ export {
   backupAPI,
   tlsFingerprintProfileAPI,
   channelsAPI,
+  upstreamsAPI,
   channelMonitorAPI,
   channelMonitorTemplateAPI,
   adminPaymentAPI,
@@ -120,6 +123,22 @@ export default adminAPI
 // Re-export types used by components
 export type { AuditLog, AuditLogQuery, AuditLogListResponse } from './audit'
 export type { BalanceHistoryItem } from './users'
+export type {
+  Upstream,
+  UpstreamOverview,
+  UpstreamAccountRow,
+  UpstreamGroup,
+  UpstreamModelPrice,
+  UpstreamDetail,
+  UpstreamCompareResult,
+  UpstreamCompareRow,
+  UpstreamCompareCell,
+  UnassignedAccountHost,
+  UpstreamInput,
+  UpstreamGroupInput,
+  UpstreamModelPriceInput,
+  UpstreamBundleImport
+} from './upstreams'
 export type { ErrorPassthroughRule, CreateRuleRequest, UpdateRuleRequest } from './errorPassthrough'
 export type { BackupAgentHealth, DataManagementConfig } from './dataManagement'
 export type { TLSFingerprintProfile, CreateProfileRequest, UpdateProfileRequest } from './tlsFingerprintProfile'

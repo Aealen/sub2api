@@ -48,6 +48,9 @@ func RegisterAdminRoutes(
 		// 账号管理
 		registerAccountRoutes(admin, h, stepUpAuth)
 
+		// 上游管理（上游库 / 上游侧分组 / 模型价格台账 / 跨上游比价）
+		registerUpstreamRoutes(admin, h)
+
 		// 公告管理
 		registerAnnouncementRoutes(admin, h)
 
@@ -466,6 +469,35 @@ func registerAccountRoutes(admin *gin.RouterGroup, h *handler.Handlers, stepUpAu
 		accounts.POST("/exchange-setup-token-code", h.Admin.OAuth.ExchangeSetupTokenCode)
 		accounts.POST("/cookie-auth", h.Admin.OAuth.CookieAuth)
 		accounts.POST("/setup-token-cookie-auth", h.Admin.OAuth.SetupTokenCookieAuth)
+	}
+}
+
+// registerUpstreamRoutes 上游管理：上游库、上游侧分组、模型价格台账与跨上游比价。
+//
+// 静态路径（compare / unassigned-accounts / import-bundle）必须先于 /:id 注册，
+// 保证「compare」这类词不会被当成上游 ID 解析。
+func registerUpstreamRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	upstreams := admin.Group("/upstreams")
+	{
+		upstreams.GET("", h.Admin.Upstream.List)
+		upstreams.POST("", h.Admin.Upstream.Create)
+		upstreams.GET("/compare", h.Admin.Upstream.Compare)
+		upstreams.GET("/unassigned-accounts", h.Admin.Upstream.ListUnassignedAccounts)
+		upstreams.POST("/import-bundle", h.Admin.Upstream.ImportBundle)
+
+		upstreams.GET("/:id", h.Admin.Upstream.GetByID)
+		upstreams.PUT("/:id", h.Admin.Upstream.Update)
+		upstreams.DELETE("/:id", h.Admin.Upstream.Delete)
+		upstreams.PUT("/:id/accounts", h.Admin.Upstream.AssignAccounts)
+
+		upstreams.GET("/:id/groups", h.Admin.Upstream.ListGroups)
+		upstreams.POST("/:id/groups", h.Admin.Upstream.UpsertGroup)
+		upstreams.DELETE("/:id/groups/:groupId", h.Admin.Upstream.DeleteGroup)
+
+		upstreams.GET("/:id/model-prices", h.Admin.Upstream.ListModelPrices)
+		upstreams.POST("/:id/model-prices", h.Admin.Upstream.UpsertModelPrice)
+		upstreams.DELETE("/:id/model-prices/:priceId", h.Admin.Upstream.DeleteModelPrice)
+		upstreams.POST("/:id/model-prices/import", h.Admin.Upstream.ImportModelPrices)
 	}
 }
 
