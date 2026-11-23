@@ -97,6 +97,7 @@ export default {
     viewAll: 'View all announcements',
     markedAsRead: 'Marked as read',
     allMarkedAsRead: 'All announcements marked as read',
+    unreadRemaining: '{count} more unread announcement(s)',
     newCount: '{count} new announcement | {count} new announcements',
     readAt: 'Read at',
     read: 'Read',

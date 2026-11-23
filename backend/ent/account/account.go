@@ -46,6 +46,12 @@ const (
 	FieldPriority = "priority"
 	// FieldRateMultiplier holds the string denoting the rate_multiplier field in the database.
 	FieldRateMultiplier = "rate_multiplier"
+	// FieldUpstreamBalance holds the string denoting the upstream_balance field in the database.
+	FieldUpstreamBalance = "upstream_balance"
+	// FieldUpstreamBalanceUpdatedAt holds the string denoting the upstream_balance_updated_at field in the database.
+	FieldUpstreamBalanceUpdatedAt = "upstream_balance_updated_at"
+	// FieldBalanceAlertThreshold holds the string denoting the balance_alert_threshold field in the database.
+	FieldBalanceAlertThreshold = "balance_alert_threshold"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// FieldErrorMessage holds the string denoting the error_message field in the database.
@@ -146,6 +152,9 @@ var Columns = []string{
 	FieldLoadFactor,
 	FieldPriority,
 	FieldRateMultiplier,
+	FieldUpstreamBalance,
+	FieldUpstreamBalanceUpdatedAt,
+	FieldBalanceAlertThreshold,
 	FieldStatus,
 	FieldErrorMessage,
 	FieldLastUsedAt,
@@ -319,6 +328,21 @@ func ByPriority(opts ...sql.OrderTermOption) OrderOption {
 // ByRateMultiplier orders the results by the rate_multiplier field.
 func ByRateMultiplier(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldRateMultiplier, opts...).ToFunc()
+}
+
+// ByUpstreamBalance orders the results by the upstream_balance field.
+func ByUpstreamBalance(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpstreamBalance, opts...).ToFunc()
+}
+
+// ByUpstreamBalanceUpdatedAt orders the results by the upstream_balance_updated_at field.
+func ByUpstreamBalanceUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpstreamBalanceUpdatedAt, opts...).ToFunc()
+}
+
+// ByBalanceAlertThreshold orders the results by the balance_alert_threshold field.
+func ByBalanceAlertThreshold(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBalanceAlertThreshold, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.

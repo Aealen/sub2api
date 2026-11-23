@@ -120,6 +120,21 @@ func RateMultiplier(v float64) predicate.Account {
 	return predicate.Account(sql.FieldEQ(FieldRateMultiplier, v))
 }
 
+// UpstreamBalance applies equality check predicate on the "upstream_balance" field. It's identical to UpstreamBalanceEQ.
+func UpstreamBalance(v float64) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldUpstreamBalance, v))
+}
+
+// UpstreamBalanceUpdatedAt applies equality check predicate on the "upstream_balance_updated_at" field. It's identical to UpstreamBalanceUpdatedAtEQ.
+func UpstreamBalanceUpdatedAt(v time.Time) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldUpstreamBalanceUpdatedAt, v))
+}
+
+// BalanceAlertThreshold applies equality check predicate on the "balance_alert_threshold" field. It's identical to BalanceAlertThresholdEQ.
+func BalanceAlertThreshold(v float64) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldBalanceAlertThreshold, v))
+}
+
 // Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
 func Status(v string) predicate.Account {
 	return predicate.Account(sql.FieldEQ(FieldStatus, v))
@@ -843,6 +858,156 @@ func RateMultiplierLT(v float64) predicate.Account {
 // RateMultiplierLTE applies the LTE predicate on the "rate_multiplier" field.
 func RateMultiplierLTE(v float64) predicate.Account {
 	return predicate.Account(sql.FieldLTE(FieldRateMultiplier, v))
+}
+
+// UpstreamBalanceEQ applies the EQ predicate on the "upstream_balance" field.
+func UpstreamBalanceEQ(v float64) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldUpstreamBalance, v))
+}
+
+// UpstreamBalanceNEQ applies the NEQ predicate on the "upstream_balance" field.
+func UpstreamBalanceNEQ(v float64) predicate.Account {
+	return predicate.Account(sql.FieldNEQ(FieldUpstreamBalance, v))
+}
+
+// UpstreamBalanceIn applies the In predicate on the "upstream_balance" field.
+func UpstreamBalanceIn(vs ...float64) predicate.Account {
+	return predicate.Account(sql.FieldIn(FieldUpstreamBalance, vs...))
+}
+
+// UpstreamBalanceNotIn applies the NotIn predicate on the "upstream_balance" field.
+func UpstreamBalanceNotIn(vs ...float64) predicate.Account {
+	return predicate.Account(sql.FieldNotIn(FieldUpstreamBalance, vs...))
+}
+
+// UpstreamBalanceGT applies the GT predicate on the "upstream_balance" field.
+func UpstreamBalanceGT(v float64) predicate.Account {
+	return predicate.Account(sql.FieldGT(FieldUpstreamBalance, v))
+}
+
+// UpstreamBalanceGTE applies the GTE predicate on the "upstream_balance" field.
+func UpstreamBalanceGTE(v float64) predicate.Account {
+	return predicate.Account(sql.FieldGTE(FieldUpstreamBalance, v))
+}
+
+// UpstreamBalanceLT applies the LT predicate on the "upstream_balance" field.
+func UpstreamBalanceLT(v float64) predicate.Account {
+	return predicate.Account(sql.FieldLT(FieldUpstreamBalance, v))
+}
+
+// UpstreamBalanceLTE applies the LTE predicate on the "upstream_balance" field.
+func UpstreamBalanceLTE(v float64) predicate.Account {
+	return predicate.Account(sql.FieldLTE(FieldUpstreamBalance, v))
+}
+
+// UpstreamBalanceIsNil applies the IsNil predicate on the "upstream_balance" field.
+func UpstreamBalanceIsNil() predicate.Account {
+	return predicate.Account(sql.FieldIsNull(FieldUpstreamBalance))
+}
+
+// UpstreamBalanceNotNil applies the NotNil predicate on the "upstream_balance" field.
+func UpstreamBalanceNotNil() predicate.Account {
+	return predicate.Account(sql.FieldNotNull(FieldUpstreamBalance))
+}
+
+// UpstreamBalanceUpdatedAtEQ applies the EQ predicate on the "upstream_balance_updated_at" field.
+func UpstreamBalanceUpdatedAtEQ(v time.Time) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldUpstreamBalanceUpdatedAt, v))
+}
+
+// UpstreamBalanceUpdatedAtNEQ applies the NEQ predicate on the "upstream_balance_updated_at" field.
+func UpstreamBalanceUpdatedAtNEQ(v time.Time) predicate.Account {
+	return predicate.Account(sql.FieldNEQ(FieldUpstreamBalanceUpdatedAt, v))
+}
+
+// UpstreamBalanceUpdatedAtIn applies the In predicate on the "upstream_balance_updated_at" field.
+func UpstreamBalanceUpdatedAtIn(vs ...time.Time) predicate.Account {
+	return predicate.Account(sql.FieldIn(FieldUpstreamBalanceUpdatedAt, vs...))
+}
+
+// UpstreamBalanceUpdatedAtNotIn applies the NotIn predicate on the "upstream_balance_updated_at" field.
+func UpstreamBalanceUpdatedAtNotIn(vs ...time.Time) predicate.Account {
+	return predicate.Account(sql.FieldNotIn(FieldUpstreamBalanceUpdatedAt, vs...))
+}
+
+// UpstreamBalanceUpdatedAtGT applies the GT predicate on the "upstream_balance_updated_at" field.
+func UpstreamBalanceUpdatedAtGT(v time.Time) predicate.Account {
+	return predicate.Account(sql.FieldGT(FieldUpstreamBalanceUpdatedAt, v))
+}
+
+// UpstreamBalanceUpdatedAtGTE applies the GTE predicate on the "upstream_balance_updated_at" field.
+func UpstreamBalanceUpdatedAtGTE(v time.Time) predicate.Account {
+	return predicate.Account(sql.FieldGTE(FieldUpstreamBalanceUpdatedAt, v))
+}
+
+// UpstreamBalanceUpdatedAtLT applies the LT predicate on the "upstream_balance_updated_at" field.
+func UpstreamBalanceUpdatedAtLT(v time.Time) predicate.Account {
+	return predicate.Account(sql.FieldLT(FieldUpstreamBalanceUpdatedAt, v))
+}
+
+// UpstreamBalanceUpdatedAtLTE applies the LTE predicate on the "upstream_balance_updated_at" field.
+func UpstreamBalanceUpdatedAtLTE(v time.Time) predicate.Account {
+	return predicate.Account(sql.FieldLTE(FieldUpstreamBalanceUpdatedAt, v))
+}
+
+// UpstreamBalanceUpdatedAtIsNil applies the IsNil predicate on the "upstream_balance_updated_at" field.
+func UpstreamBalanceUpdatedAtIsNil() predicate.Account {
+	return predicate.Account(sql.FieldIsNull(FieldUpstreamBalanceUpdatedAt))
+}
+
+// UpstreamBalanceUpdatedAtNotNil applies the NotNil predicate on the "upstream_balance_updated_at" field.
+func UpstreamBalanceUpdatedAtNotNil() predicate.Account {
+	return predicate.Account(sql.FieldNotNull(FieldUpstreamBalanceUpdatedAt))
+}
+
+// BalanceAlertThresholdEQ applies the EQ predicate on the "balance_alert_threshold" field.
+func BalanceAlertThresholdEQ(v float64) predicate.Account {
+	return predicate.Account(sql.FieldEQ(FieldBalanceAlertThreshold, v))
+}
+
+// BalanceAlertThresholdNEQ applies the NEQ predicate on the "balance_alert_threshold" field.
+func BalanceAlertThresholdNEQ(v float64) predicate.Account {
+	return predicate.Account(sql.FieldNEQ(FieldBalanceAlertThreshold, v))
+}
+
+// BalanceAlertThresholdIn applies the In predicate on the "balance_alert_threshold" field.
+func BalanceAlertThresholdIn(vs ...float64) predicate.Account {
+	return predicate.Account(sql.FieldIn(FieldBalanceAlertThreshold, vs...))
+}
+
+// BalanceAlertThresholdNotIn applies the NotIn predicate on the "balance_alert_threshold" field.
+func BalanceAlertThresholdNotIn(vs ...float64) predicate.Account {
+	return predicate.Account(sql.FieldNotIn(FieldBalanceAlertThreshold, vs...))
+}
+
+// BalanceAlertThresholdGT applies the GT predicate on the "balance_alert_threshold" field.
+func BalanceAlertThresholdGT(v float64) predicate.Account {
+	return predicate.Account(sql.FieldGT(FieldBalanceAlertThreshold, v))
+}
+
+// BalanceAlertThresholdGTE applies the GTE predicate on the "balance_alert_threshold" field.
+func BalanceAlertThresholdGTE(v float64) predicate.Account {
+	return predicate.Account(sql.FieldGTE(FieldBalanceAlertThreshold, v))
+}
+
+// BalanceAlertThresholdLT applies the LT predicate on the "balance_alert_threshold" field.
+func BalanceAlertThresholdLT(v float64) predicate.Account {
+	return predicate.Account(sql.FieldLT(FieldBalanceAlertThreshold, v))
+}
+
+// BalanceAlertThresholdLTE applies the LTE predicate on the "balance_alert_threshold" field.
+func BalanceAlertThresholdLTE(v float64) predicate.Account {
+	return predicate.Account(sql.FieldLTE(FieldBalanceAlertThreshold, v))
+}
+
+// BalanceAlertThresholdIsNil applies the IsNil predicate on the "balance_alert_threshold" field.
+func BalanceAlertThresholdIsNil() predicate.Account {
+	return predicate.Account(sql.FieldIsNull(FieldBalanceAlertThreshold))
+}
+
+// BalanceAlertThresholdNotNil applies the NotNil predicate on the "balance_alert_threshold" field.
+func BalanceAlertThresholdNotNil() predicate.Account {
+	return predicate.Account(sql.FieldNotNull(FieldBalanceAlertThreshold))
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.

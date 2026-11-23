@@ -64,4 +64,26 @@ describe('mark all announcements read', () => {
     expect(store.announcements[0].read_at).toBeTruthy()
     expect(store.announcements[1].read_at).toBeFalsy()
   })
+
+  it('closes the popup after marking all so no remaining unread pops up', async () => {
+    const store = useAnnouncementStore()
+    const first = announcement(1)
+    store.announcements = [first, announcement(2)]
+    store.currentPopup = first
+    markRead.mockResolvedValue(undefined)
+    await store.markAllAsRead()
+    expect(store.currentPopup).toBeNull()
+    expect(store.unreadCount).toBe(0)
+  })
+
+  it('leaves the popup untouched when marking all fails', async () => {
+    const store = useAnnouncementStore()
+    const first = announcement(1)
+    store.announcements = [first]
+    store.currentPopup = first
+    markRead.mockRejectedValue(new Error('offline'))
+    await expect(store.markAllAsRead()).rejects.toThrow('offline')
+    // 失败时不清空当前弹窗（响应式包裹后按 id 断言）
+    expect(store.currentPopup?.id).toBe(1)
+  })
 })

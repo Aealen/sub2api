@@ -63,22 +63,43 @@
 
           <!-- Footer -->
           <div class="border-t border-gray-100 bg-gray-50/50 px-8 py-5 dark:border-dark-700 dark:bg-dark-900/30">
-            <div class="flex items-center justify-end">
-              <button
-                @click="handleDismiss"
-                data-testid="announcement-popup-dismiss"
-                class="rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-2.5 text-sm font-medium text-white shadow-lg shadow-amber-500/30 transition-all hover:shadow-xl hover:scale-105"
-              >
-                <span class="flex items-center gap-2">
-                  <svg v-if="preview" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  {{ preview ? t('common.close') : t('announcements.markRead') }}
-                </span>
-              </button>
+            <div class="flex items-center justify-between gap-4">
+              <!-- 还有多条未读时提供批量已读，省去逐条点击 -->
+              <span v-if="!preview && remainingUnreadCount > 0" class="text-xs text-gray-500 dark:text-gray-400">
+                {{ t('announcements.unreadRemaining', { count: remainingUnreadCount }) }}
+              </span>
+              <span v-else></span>
+              <div class="flex items-center gap-3">
+                <button
+                  v-if="!preview && remainingUnreadCount > 0"
+                  @click="handleMarkAllRead"
+                  :disabled="markingAllRead"
+                  data-testid="announcement-popup-mark-all-read"
+                  class="rounded-xl border border-amber-300 bg-white px-5 py-2.5 text-sm font-medium text-amber-700 transition-all hover:bg-amber-50 disabled:opacity-50 dark:border-amber-500/40 dark:bg-dark-700 dark:text-amber-300 dark:hover:bg-dark-600"
+                >
+                  <span class="flex items-center gap-2">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h11M4 12h11M4 18h7m4-4l3 3 4-4" />
+                    </svg>
+                    {{ t('announcements.markAllRead') }}
+                  </span>
+                </button>
+                <button
+                  @click="handleDismiss"
+                  data-testid="announcement-popup-dismiss"
+                  class="rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-2.5 text-sm font-medium text-white shadow-lg shadow-amber-500/30 transition-all hover:shadow-xl hover:scale-105"
+                >
+                  <span class="flex items-center gap-2">
+                    <svg v-if="preview" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <svg v-else class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {{ preview ? t('common.close') : t('announcements.markRead') }}
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -88,11 +109,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { useAnnouncementStore } from '@/stores/announcements'
+import { useAppStore } from '@/stores/app'
 import { formatRelativeWithDateTime } from '@/utils/format'
 import type { Announcement, UserAnnouncement } from '@/types'
 import '@/styles/announcement-markdown.css'
@@ -112,10 +134,22 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const appStore = useAppStore()
 const announcementStore = useAnnouncementStore()
 const displayedAnnouncement = computed(() => (
   props.preview ? props.announcement : announcementStore.currentPopup
 ))
+
+const markingAllRead = ref(false)
+
+// 除当前这条之外还剩多少条未读（含处于弹窗队列里等待展示的）
+const remainingUnreadCount = computed(() => {
+  if (props.preview) return 0
+  const currentId = announcementStore.currentPopup?.id
+  return announcementStore.announcements.filter(
+    (a) => !a.read_at && a.id !== currentId
+  ).length
+})
 
 marked.setOptions({
   breaks: true,
@@ -135,6 +169,20 @@ function handleDismiss() {
     return
   }
   announcementStore.dismissPopup()
+}
+
+// 批量已读：store 会清空队列并关闭弹窗，这里只负责提示与失败兜底
+async function handleMarkAllRead() {
+  if (markingAllRead.value) return
+  markingAllRead.value = true
+  try {
+    await announcementStore.markAllAsRead()
+    appStore.showSuccess(t('announcements.allMarkedAsRead'))
+  } catch (err: any) {
+    appStore.showError(err?.message || t('common.unknownError'))
+  } finally {
+    markingAllRead.value = false
+  }
 }
 
 // Manage body overflow — only set, never unset (bell component handles restore)

@@ -126,4 +126,91 @@ describe('AnnouncementPopup', () => {
     expect(wrapper.emitted('close')).toBeUndefined()
     wrapper.unmount()
   })
+
+  const popupItem = (id: number, readAt: string | null = null) => ({
+    id,
+    title: `Announcement ${id}`,
+    content: 'body',
+    notify_mode: 'popup' as const,
+    read_at: readAt,
+    created_at: '2026-07-24T07:30:00Z',
+    updated_at: '2026-07-24T07:30:00Z',
+  })
+
+  it('offers mark-all-read when other unread popups remain', async () => {
+    const store = useAnnouncementStore()
+    const current = popupItem(1)
+    store.currentPopup = current
+    store.announcements = [current, popupItem(2), popupItem(3)] as never
+
+    const wrapper = mount(AnnouncementPopup)
+    await wrapper.vm.$nextTick()
+
+    const markAll = document.body.querySelector<HTMLButtonElement>(
+      '[data-testid="announcement-popup-mark-all-read"]',
+    )
+    expect(markAll).not.toBeNull()
+    // 剩余未读数 = 2（不含当前这条）
+    expect(document.body.textContent).toContain('announcements.unreadRemaining')
+
+    wrapper.unmount()
+  })
+
+  it('hides mark-all-read when the current one is the only unread', async () => {
+    const store = useAnnouncementStore()
+    const current = popupItem(1)
+    store.currentPopup = current
+    store.announcements = [current, popupItem(2, '2026-07-24T08:00:00Z')] as never
+
+    const wrapper = mount(AnnouncementPopup)
+    await wrapper.vm.$nextTick()
+
+    expect(
+      document.body.querySelector('[data-testid="announcement-popup-mark-all-read"]'),
+    ).toBeNull()
+
+    wrapper.unmount()
+  })
+
+  it('marks everything read and lets the store close the popup when clicking mark-all-read', async () => {
+    const store = useAnnouncementStore()
+    const current = popupItem(1)
+    store.currentPopup = current
+    store.announcements = [current, popupItem(2)] as never
+    // store.markAllAsRead 负责标记并关闭弹窗（清空队列），组件不再自行 dismiss
+    const markAll = vi.spyOn(store, 'markAllAsRead').mockImplementation(async () => {
+      store.announcements = store.announcements.map((a) => ({ ...a, read_at: '2026-07-24T09:00:00Z' })) as never
+      store.currentPopup = null
+    })
+    const dismissPopup = vi.spyOn(store, 'dismissPopup').mockResolvedValue()
+
+    const wrapper = mount(AnnouncementPopup)
+    await wrapper.vm.$nextTick()
+
+    document.body
+      .querySelector<HTMLButtonElement>('[data-testid="announcement-popup-mark-all-read"]')
+      ?.click()
+    await wrapper.vm.$nextTick()
+    await wrapper.vm.$nextTick()
+
+    expect(markAll).toHaveBeenCalledTimes(1)
+    // 不能走 dismissPopup：那会把队列里的下一条又弹出来
+    expect(dismissPopup).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('does not offer mark-all-read in preview mode', async () => {
+    const store = useAnnouncementStore()
+    store.currentPopup = popupItem(1)
+    store.announcements = [popupItem(1), popupItem(2)] as never
+
+    const wrapper = mount(AnnouncementPopup, { props: { announcement, preview: true } })
+    await wrapper.vm.$nextTick()
+
+    expect(
+      document.body.querySelector('[data-testid="announcement-popup-mark-all-read"]'),
+    ).toBeNull()
+
+    wrapper.unmount()
+  })
 })

@@ -195,6 +195,48 @@ func (_c *AccountCreate) SetNillableRateMultiplier(v *float64) *AccountCreate {
 	return _c
 }
 
+// SetUpstreamBalance sets the "upstream_balance" field.
+func (_c *AccountCreate) SetUpstreamBalance(v float64) *AccountCreate {
+	_c.mutation.SetUpstreamBalance(v)
+	return _c
+}
+
+// SetNillableUpstreamBalance sets the "upstream_balance" field if the given value is not nil.
+func (_c *AccountCreate) SetNillableUpstreamBalance(v *float64) *AccountCreate {
+	if v != nil {
+		_c.SetUpstreamBalance(*v)
+	}
+	return _c
+}
+
+// SetUpstreamBalanceUpdatedAt sets the "upstream_balance_updated_at" field.
+func (_c *AccountCreate) SetUpstreamBalanceUpdatedAt(v time.Time) *AccountCreate {
+	_c.mutation.SetUpstreamBalanceUpdatedAt(v)
+	return _c
+}
+
+// SetNillableUpstreamBalanceUpdatedAt sets the "upstream_balance_updated_at" field if the given value is not nil.
+func (_c *AccountCreate) SetNillableUpstreamBalanceUpdatedAt(v *time.Time) *AccountCreate {
+	if v != nil {
+		_c.SetUpstreamBalanceUpdatedAt(*v)
+	}
+	return _c
+}
+
+// SetBalanceAlertThreshold sets the "balance_alert_threshold" field.
+func (_c *AccountCreate) SetBalanceAlertThreshold(v float64) *AccountCreate {
+	_c.mutation.SetBalanceAlertThreshold(v)
+	return _c
+}
+
+// SetNillableBalanceAlertThreshold sets the "balance_alert_threshold" field if the given value is not nil.
+func (_c *AccountCreate) SetNillableBalanceAlertThreshold(v *float64) *AccountCreate {
+	if v != nil {
+		_c.SetBalanceAlertThreshold(*v)
+	}
+	return _c
+}
+
 // SetStatus sets the "status" field.
 func (_c *AccountCreate) SetStatus(v string) *AccountCreate {
 	_c.mutation.SetStatus(v)
@@ -741,6 +783,18 @@ func (_c *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 		_spec.SetField(account.FieldRateMultiplier, field.TypeFloat64, value)
 		_node.RateMultiplier = value
 	}
+	if value, ok := _c.mutation.UpstreamBalance(); ok {
+		_spec.SetField(account.FieldUpstreamBalance, field.TypeFloat64, value)
+		_node.UpstreamBalance = &value
+	}
+	if value, ok := _c.mutation.UpstreamBalanceUpdatedAt(); ok {
+		_spec.SetField(account.FieldUpstreamBalanceUpdatedAt, field.TypeTime, value)
+		_node.UpstreamBalanceUpdatedAt = &value
+	}
+	if value, ok := _c.mutation.BalanceAlertThreshold(); ok {
+		_spec.SetField(account.FieldBalanceAlertThreshold, field.TypeFloat64, value)
+		_node.BalanceAlertThreshold = &value
+	}
 	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(account.FieldStatus, field.TypeString, value)
 		_node.Status = value
@@ -1164,6 +1218,72 @@ func (u *AccountUpsert) UpdateRateMultiplier() *AccountUpsert {
 // AddRateMultiplier adds v to the "rate_multiplier" field.
 func (u *AccountUpsert) AddRateMultiplier(v float64) *AccountUpsert {
 	u.Add(account.FieldRateMultiplier, v)
+	return u
+}
+
+// SetUpstreamBalance sets the "upstream_balance" field.
+func (u *AccountUpsert) SetUpstreamBalance(v float64) *AccountUpsert {
+	u.Set(account.FieldUpstreamBalance, v)
+	return u
+}
+
+// UpdateUpstreamBalance sets the "upstream_balance" field to the value that was provided on create.
+func (u *AccountUpsert) UpdateUpstreamBalance() *AccountUpsert {
+	u.SetExcluded(account.FieldUpstreamBalance)
+	return u
+}
+
+// AddUpstreamBalance adds v to the "upstream_balance" field.
+func (u *AccountUpsert) AddUpstreamBalance(v float64) *AccountUpsert {
+	u.Add(account.FieldUpstreamBalance, v)
+	return u
+}
+
+// ClearUpstreamBalance clears the value of the "upstream_balance" field.
+func (u *AccountUpsert) ClearUpstreamBalance() *AccountUpsert {
+	u.SetNull(account.FieldUpstreamBalance)
+	return u
+}
+
+// SetUpstreamBalanceUpdatedAt sets the "upstream_balance_updated_at" field.
+func (u *AccountUpsert) SetUpstreamBalanceUpdatedAt(v time.Time) *AccountUpsert {
+	u.Set(account.FieldUpstreamBalanceUpdatedAt, v)
+	return u
+}
+
+// UpdateUpstreamBalanceUpdatedAt sets the "upstream_balance_updated_at" field to the value that was provided on create.
+func (u *AccountUpsert) UpdateUpstreamBalanceUpdatedAt() *AccountUpsert {
+	u.SetExcluded(account.FieldUpstreamBalanceUpdatedAt)
+	return u
+}
+
+// ClearUpstreamBalanceUpdatedAt clears the value of the "upstream_balance_updated_at" field.
+func (u *AccountUpsert) ClearUpstreamBalanceUpdatedAt() *AccountUpsert {
+	u.SetNull(account.FieldUpstreamBalanceUpdatedAt)
+	return u
+}
+
+// SetBalanceAlertThreshold sets the "balance_alert_threshold" field.
+func (u *AccountUpsert) SetBalanceAlertThreshold(v float64) *AccountUpsert {
+	u.Set(account.FieldBalanceAlertThreshold, v)
+	return u
+}
+
+// UpdateBalanceAlertThreshold sets the "balance_alert_threshold" field to the value that was provided on create.
+func (u *AccountUpsert) UpdateBalanceAlertThreshold() *AccountUpsert {
+	u.SetExcluded(account.FieldBalanceAlertThreshold)
+	return u
+}
+
+// AddBalanceAlertThreshold adds v to the "balance_alert_threshold" field.
+func (u *AccountUpsert) AddBalanceAlertThreshold(v float64) *AccountUpsert {
+	u.Add(account.FieldBalanceAlertThreshold, v)
+	return u
+}
+
+// ClearBalanceAlertThreshold clears the value of the "balance_alert_threshold" field.
+func (u *AccountUpsert) ClearBalanceAlertThreshold() *AccountUpsert {
+	u.SetNull(account.FieldBalanceAlertThreshold)
 	return u
 }
 
@@ -1739,6 +1859,83 @@ func (u *AccountUpsertOne) AddRateMultiplier(v float64) *AccountUpsertOne {
 func (u *AccountUpsertOne) UpdateRateMultiplier() *AccountUpsertOne {
 	return u.Update(func(s *AccountUpsert) {
 		s.UpdateRateMultiplier()
+	})
+}
+
+// SetUpstreamBalance sets the "upstream_balance" field.
+func (u *AccountUpsertOne) SetUpstreamBalance(v float64) *AccountUpsertOne {
+	return u.Update(func(s *AccountUpsert) {
+		s.SetUpstreamBalance(v)
+	})
+}
+
+// AddUpstreamBalance adds v to the "upstream_balance" field.
+func (u *AccountUpsertOne) AddUpstreamBalance(v float64) *AccountUpsertOne {
+	return u.Update(func(s *AccountUpsert) {
+		s.AddUpstreamBalance(v)
+	})
+}
+
+// UpdateUpstreamBalance sets the "upstream_balance" field to the value that was provided on create.
+func (u *AccountUpsertOne) UpdateUpstreamBalance() *AccountUpsertOne {
+	return u.Update(func(s *AccountUpsert) {
+		s.UpdateUpstreamBalance()
+	})
+}
+
+// ClearUpstreamBalance clears the value of the "upstream_balance" field.
+func (u *AccountUpsertOne) ClearUpstreamBalance() *AccountUpsertOne {
+	return u.Update(func(s *AccountUpsert) {
+		s.ClearUpstreamBalance()
+	})
+}
+
+// SetUpstreamBalanceUpdatedAt sets the "upstream_balance_updated_at" field.
+func (u *AccountUpsertOne) SetUpstreamBalanceUpdatedAt(v time.Time) *AccountUpsertOne {
+	return u.Update(func(s *AccountUpsert) {
+		s.SetUpstreamBalanceUpdatedAt(v)
+	})
+}
+
+// UpdateUpstreamBalanceUpdatedAt sets the "upstream_balance_updated_at" field to the value that was provided on create.
+func (u *AccountUpsertOne) UpdateUpstreamBalanceUpdatedAt() *AccountUpsertOne {
+	return u.Update(func(s *AccountUpsert) {
+		s.UpdateUpstreamBalanceUpdatedAt()
+	})
+}
+
+// ClearUpstreamBalanceUpdatedAt clears the value of the "upstream_balance_updated_at" field.
+func (u *AccountUpsertOne) ClearUpstreamBalanceUpdatedAt() *AccountUpsertOne {
+	return u.Update(func(s *AccountUpsert) {
+		s.ClearUpstreamBalanceUpdatedAt()
+	})
+}
+
+// SetBalanceAlertThreshold sets the "balance_alert_threshold" field.
+func (u *AccountUpsertOne) SetBalanceAlertThreshold(v float64) *AccountUpsertOne {
+	return u.Update(func(s *AccountUpsert) {
+		s.SetBalanceAlertThreshold(v)
+	})
+}
+
+// AddBalanceAlertThreshold adds v to the "balance_alert_threshold" field.
+func (u *AccountUpsertOne) AddBalanceAlertThreshold(v float64) *AccountUpsertOne {
+	return u.Update(func(s *AccountUpsert) {
+		s.AddBalanceAlertThreshold(v)
+	})
+}
+
+// UpdateBalanceAlertThreshold sets the "balance_alert_threshold" field to the value that was provided on create.
+func (u *AccountUpsertOne) UpdateBalanceAlertThreshold() *AccountUpsertOne {
+	return u.Update(func(s *AccountUpsert) {
+		s.UpdateBalanceAlertThreshold()
+	})
+}
+
+// ClearBalanceAlertThreshold clears the value of the "balance_alert_threshold" field.
+func (u *AccountUpsertOne) ClearBalanceAlertThreshold() *AccountUpsertOne {
+	return u.Update(func(s *AccountUpsert) {
+		s.ClearBalanceAlertThreshold()
 	})
 }
 
@@ -2524,6 +2721,83 @@ func (u *AccountUpsertBulk) AddRateMultiplier(v float64) *AccountUpsertBulk {
 func (u *AccountUpsertBulk) UpdateRateMultiplier() *AccountUpsertBulk {
 	return u.Update(func(s *AccountUpsert) {
 		s.UpdateRateMultiplier()
+	})
+}
+
+// SetUpstreamBalance sets the "upstream_balance" field.
+func (u *AccountUpsertBulk) SetUpstreamBalance(v float64) *AccountUpsertBulk {
+	return u.Update(func(s *AccountUpsert) {
+		s.SetUpstreamBalance(v)
+	})
+}
+
+// AddUpstreamBalance adds v to the "upstream_balance" field.
+func (u *AccountUpsertBulk) AddUpstreamBalance(v float64) *AccountUpsertBulk {
+	return u.Update(func(s *AccountUpsert) {
+		s.AddUpstreamBalance(v)
+	})
+}
+
+// UpdateUpstreamBalance sets the "upstream_balance" field to the value that was provided on create.
+func (u *AccountUpsertBulk) UpdateUpstreamBalance() *AccountUpsertBulk {
+	return u.Update(func(s *AccountUpsert) {
+		s.UpdateUpstreamBalance()
+	})
+}
+
+// ClearUpstreamBalance clears the value of the "upstream_balance" field.
+func (u *AccountUpsertBulk) ClearUpstreamBalance() *AccountUpsertBulk {
+	return u.Update(func(s *AccountUpsert) {
+		s.ClearUpstreamBalance()
+	})
+}
+
+// SetUpstreamBalanceUpdatedAt sets the "upstream_balance_updated_at" field.
+func (u *AccountUpsertBulk) SetUpstreamBalanceUpdatedAt(v time.Time) *AccountUpsertBulk {
+	return u.Update(func(s *AccountUpsert) {
+		s.SetUpstreamBalanceUpdatedAt(v)
+	})
+}
+
+// UpdateUpstreamBalanceUpdatedAt sets the "upstream_balance_updated_at" field to the value that was provided on create.
+func (u *AccountUpsertBulk) UpdateUpstreamBalanceUpdatedAt() *AccountUpsertBulk {
+	return u.Update(func(s *AccountUpsert) {
+		s.UpdateUpstreamBalanceUpdatedAt()
+	})
+}
+
+// ClearUpstreamBalanceUpdatedAt clears the value of the "upstream_balance_updated_at" field.
+func (u *AccountUpsertBulk) ClearUpstreamBalanceUpdatedAt() *AccountUpsertBulk {
+	return u.Update(func(s *AccountUpsert) {
+		s.ClearUpstreamBalanceUpdatedAt()
+	})
+}
+
+// SetBalanceAlertThreshold sets the "balance_alert_threshold" field.
+func (u *AccountUpsertBulk) SetBalanceAlertThreshold(v float64) *AccountUpsertBulk {
+	return u.Update(func(s *AccountUpsert) {
+		s.SetBalanceAlertThreshold(v)
+	})
+}
+
+// AddBalanceAlertThreshold adds v to the "balance_alert_threshold" field.
+func (u *AccountUpsertBulk) AddBalanceAlertThreshold(v float64) *AccountUpsertBulk {
+	return u.Update(func(s *AccountUpsert) {
+		s.AddBalanceAlertThreshold(v)
+	})
+}
+
+// UpdateBalanceAlertThreshold sets the "balance_alert_threshold" field to the value that was provided on create.
+func (u *AccountUpsertBulk) UpdateBalanceAlertThreshold() *AccountUpsertBulk {
+	return u.Update(func(s *AccountUpsert) {
+		s.UpdateBalanceAlertThreshold()
+	})
+}
+
+// ClearBalanceAlertThreshold clears the value of the "balance_alert_threshold" field.
+func (u *AccountUpsertBulk) ClearBalanceAlertThreshold() *AccountUpsertBulk {
+	return u.Update(func(s *AccountUpsert) {
+		s.ClearBalanceAlertThreshold()
 	})
 }
 

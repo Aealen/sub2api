@@ -113,6 +113,26 @@ func (Account) Fields() []ent.Field {
 			SchemaType(map[string]string{dialect.Postgres: "decimal(10,4)"}).
 			Default(1.0),
 
+		// upstream_balance: 上游余额（来自上游 /v1/usage 接口的 balance 字段），
+		// 由上游余额同步服务定期刷新；NULL 表示尚未成功同步过或上游不支持该接口。
+		field.Float("upstream_balance").
+			SchemaType(map[string]string{dialect.Postgres: "decimal(20,8)"}).
+			Optional().
+			Nillable(),
+
+		// upstream_balance_updated_at: 上游余额最后成功同步时间。
+		field.Time("upstream_balance_updated_at").
+			Optional().
+			Nillable().
+			SchemaType(map[string]string{dialect.Postgres: "timestamptz"}),
+
+		// balance_alert_threshold: 上游余额专属预警阈值（美元）。
+		// NULL 表示使用全局默认阈值（settings 上游余额预警配置）。
+		field.Float("balance_alert_threshold").
+			SchemaType(map[string]string{dialect.Postgres: "decimal(20,4)"}).
+			Optional().
+			Nillable(),
+
 		// status: 账户状态，如 "active", "error", "disabled"
 		field.String("status").
 			MaxLen(20).

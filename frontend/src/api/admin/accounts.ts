@@ -1222,7 +1222,75 @@ export const accountsAPI = {
   updateOpenCodeGoUsageSettings,
   getOpenCodeGoUsage,
   setOpenCodeGoUsageAutoRefresh,
-  refreshOpenCodeGoUsage
+  refreshOpenCodeGoUsage,
+  getUpstreamBalanceConfig,
+  updateUpstreamBalanceConfig,
+  refreshUpstreamBalance,
+  setAccountBalanceAlertThreshold
 }
 
 export default accountsAPI
+
+// ==================== 上游余额监控 ====================
+
+/** 上游余额监控全局配置（预警配置弹窗） */
+export interface UpstreamBalanceConfig {
+  /** 同步间隔秒数（30/60/300/600/1800） */
+  sync_interval_seconds: number
+  /** 预警开关 */
+  alert_enabled: boolean
+  /** 预警邮箱列表 */
+  alert_emails: string[]
+  /** 全局默认预警阈值（美元） */
+  alert_threshold: number
+}
+
+/** 专属预警阈值覆盖（已设置的账号） */
+export interface UpstreamBalanceThresholdOverride {
+  account_id: number
+  account_name: string
+  threshold: number
+}
+
+/** 预警配置弹窗的账号下拉项（可同步上游余额的全部账号，不限状态、不分页） */
+export interface UpstreamBalanceAccountOption {
+  id: number
+  name: string
+  platform: string
+  status: string
+  upstream_balance: number | null
+}
+
+/** GET 配置接口的响应：与后端 gin.H{"config","per_account_thresholds","accounts"} 一一对应 */
+export interface UpstreamBalanceConfigResponse {
+  config: UpstreamBalanceConfig
+  per_account_thresholds: UpstreamBalanceThresholdOverride[]
+  accounts: UpstreamBalanceAccountOption[]
+}
+
+/** 读取预警配置弹窗所需的全部数据（全局配置 + 专属阈值 + 可选账号） */
+export async function getUpstreamBalanceConfig(): Promise<UpstreamBalanceConfigResponse> {
+  const { data } = await apiClient.get<UpstreamBalanceConfigResponse>('/admin/accounts/upstream-balance/config')
+  return data
+}
+
+/** 保存上游余额监控全局配置 */
+export async function updateUpstreamBalanceConfig(config: UpstreamBalanceConfig): Promise<UpstreamBalanceConfig> {
+  const { data } = await apiClient.put<UpstreamBalanceConfig>('/admin/accounts/upstream-balance/config', config)
+  return data
+}
+
+/** 手动刷新上游余额：accountId 缺省时全量刷新 */
+export async function refreshUpstreamBalance(accountId?: number): Promise<{ account_id?: number; balance?: number | null; triggered?: string }> {
+  const body = accountId ? { account_id: accountId } : {}
+  const { data } = await apiClient.post<{ account_id?: number; balance?: number | null; triggered?: string }>(
+    '/admin/accounts/upstream-balance/refresh',
+    body
+  )
+  return data
+}
+
+/** 设置账号专属余额预警阈值（null 清除，回落全局默认） */
+export async function setAccountBalanceAlertThreshold(id: number, threshold: number | null): Promise<void> {
+  await apiClient.put(`/admin/accounts/${id}/balance-alert-threshold`, { threshold })
+}
