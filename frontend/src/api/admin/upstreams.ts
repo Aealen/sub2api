@@ -21,7 +21,7 @@ export interface Upstream {
 export interface UpstreamOverview extends Upstream {
   account_total: number
   account_active: number
-  balance_total: number
+  site_balance: number
   balance_updated_at: string | null
   rate_multiplier_min: number | null
   rate_multiplier_max: number | null

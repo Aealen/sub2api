@@ -84,8 +84,8 @@
           </template>
 
           <template #cell-balance="{ row }">
-            <div class="font-mono text-sm" :class="row.balance_total <= 0 ? 'text-gray-400' : 'text-gray-900 dark:text-gray-100'">
-              ${{ row.balance_total.toFixed(2) }}
+            <div class="font-mono text-sm" :class="row.site_balance <= 0 ? 'text-gray-400' : 'text-gray-900 dark:text-gray-100'">
+              ${{ row.site_balance.toFixed(2) }}
             </div>
             <div class="text-xs text-gray-400">
               {{ row.balance_updated_at ? formatTime(row.balance_updated_at) : '—' }}
