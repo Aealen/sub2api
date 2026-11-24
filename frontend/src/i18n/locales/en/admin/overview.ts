@@ -917,7 +917,7 @@ export default {
       },
       accountsSection: {
         title: 'Accounts & Scheduling Priority',
-        hint: 'Lower numbers run first within the group: the highest-priority layer serves until saturated, then requests fail over to the next tier.',
+        hint: 'This edits the account scheduling priority (the same value shown in Account Management): lower numbers run first within the group; the top layer serves until saturated, then requests fail over to the next tier.',
         save: 'Save priorities',
         saving: 'Saving…',
         empty: 'No accounts bound to this group (bind accounts in Account Management)',

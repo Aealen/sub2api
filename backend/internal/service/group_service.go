@@ -70,7 +70,9 @@ type GroupSortOrderUpdate struct {
 	SortOrder int   `json:"sort_order"`
 }
 
-// GroupAccountWithPriority 分组内账号及其调度优先级（account_groups.priority）
+// GroupAccountWithPriority 分组内账号及其调度优先级。
+// Priority 即账号级调度优先级（accounts.priority）：分组内编辑直通账号优先级，
+// 与账号管理入口共用同一事实来源，调度分层也只消费该值。
 type GroupAccountWithPriority struct {
 	AccountID   int64  `json:"account_id"`
 	Name        string `json:"name"`
@@ -80,7 +82,7 @@ type GroupAccountWithPriority struct {
 	Priority    int    `json:"priority"`
 }
 
-// AccountGroupPriorityUpdate 单个账号在指定分组内的调度优先级更新
+// AccountGroupPriorityUpdate 分组视角下单个账号的调度优先级更新（写 accounts.priority）
 type AccountGroupPriorityUpdate struct {
 	AccountID int64 `json:"account_id"`
 	Priority  int   `json:"priority"`

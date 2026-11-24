@@ -576,6 +576,10 @@ const ModelPlazaIcon = {
   render: () => h(Icon, { name: 'grid' })
 }
 
+const UpstreamIcon = {
+  render: () => h(Icon, { name: 'cloud' })
+}
+
 const MCPIcon = {
   render: () => h(Icon, { name: 'mcp' })
 }
@@ -919,6 +923,17 @@ const adminNavItems = computed((): NavItem[] => {
     // 「仅充值」站点连管理端的「订阅管理」入口也一并收起（路由本身不拦截）。
     { path: '/admin/subscriptions', label: t('nav.subscriptions'), icon: CreditCardIcon, hideInSimpleMode: true, featureFlag: flagSubscription },
     { path: '/admin/accounts', label: t('nav.accounts'), icon: GlobeIcon },
+    {
+      path: '/admin/upstreams',
+      label: t('nav.upstreamManagement'),
+      icon: UpstreamIcon,
+      hideInSimpleMode: true,
+      expandOnly: true,
+      children: [
+        { path: '/admin/upstreams/list', label: t('nav.upstreamList'), icon: PriceTagIcon },
+        { path: '/admin/upstreams/compare', label: t('nav.upstreamCompare'), icon: ChartIcon },
+      ],
+    },
     { path: '/admin/prompt-rules', label: t('nav.promptRules'), icon: PromptIcon },
     { path: '/admin/plugins', label: t('nav.plugins'), icon: PluginIcon, featureFlag: flagPluginManagement },
     { path: '/admin/announcements', label: t('nav.announcements'), icon: BellIcon },

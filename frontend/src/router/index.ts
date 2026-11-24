@@ -561,6 +561,34 @@ const routes: RouteRecordRaw[] = [
     }
   },
   {
+    path: '/admin/upstreams',
+    redirect: '/admin/upstreams/list'
+  },
+  {
+    path: '/admin/upstreams/list',
+    name: 'AdminUpstreams',
+    component: () => import('@/views/admin/UpstreamsView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Upstreams',
+      titleKey: 'admin.upstreams.title',
+      descriptionKey: 'admin.upstreams.description'
+    }
+  },
+  {
+    path: '/admin/upstreams/compare',
+    name: 'AdminUpstreamCompare',
+    component: () => import('@/views/admin/UpstreamCompareView.vue'),
+    meta: {
+      requiresAuth: true,
+      requiresAdmin: true,
+      title: 'Upstream Price Comparison',
+      titleKey: 'admin.upstreams.compare.title',
+      descriptionKey: 'admin.upstreams.compare.description'
+    }
+  },
+  {
     path: '/admin/plugins',
     name: 'AdminPlugins',
     component: () => import('@/views/admin/PluginsView.vue'),

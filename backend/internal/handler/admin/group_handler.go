@@ -1215,7 +1215,7 @@ func (h *GroupHandler) UpdateSortOrder(c *gin.Context) {
 	response.Success(c, gin.H{"message": "Sort order updated successfully"})
 }
 
-// GetGroupAccounts 列出分组内账号及其调度优先级
+// GetGroupAccounts 列出分组内账号及其调度优先级（账号级 accounts.priority，与账号管理同源）
 // GET /api/v1/admin/groups/:id/accounts
 func (h *GroupHandler) GetGroupAccounts(c *gin.Context) {
 	if h.rejectUnsupportedSimpleModeOperation(c, "group_accounts") {
@@ -1245,7 +1245,7 @@ type updateGroupAccountPrioritiesRequest struct {
 	} `json:"items" binding:"required,min=1,dive"`
 }
 
-// UpdateGroupAccountPriorities 批量更新账号在指定分组内的调度优先级
+// UpdateGroupAccountPriorities 分组视角批量更新账号调度优先级（写 accounts.priority）
 // PUT /api/v1/admin/groups/:id/accounts/priority
 func (h *GroupHandler) UpdateGroupAccountPriorities(c *gin.Context) {
 	if h.rejectUnsupportedSimpleModeOperation(c, "group_accounts") {

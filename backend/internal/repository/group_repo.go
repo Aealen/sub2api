@@ -1250,11 +1250,11 @@ func (r *groupRepository) UpdateSortOrders(ctx context.Context, updates []servic
 // ListAccountsByGroupWithPriority 列出分组内账号及其调度优先级（含已禁用账号，便于管理视图展示）。
 func (r *groupRepository) ListAccountsByGroupWithPriority(ctx context.Context, groupID int64) ([]service.GroupAccountWithPriority, error) {
 	rows, err := r.sql.QueryContext(ctx, `
-		SELECT ag.account_id, ag.priority, a.name, a.platform, a.status, a.schedulable
+		SELECT ag.account_id, a.priority, a.name, a.platform, a.status, a.schedulable
 		FROM account_groups ag
 		JOIN accounts a ON a.id = ag.account_id
 		WHERE ag.group_id = $1 AND a.deleted_at IS NULL
-		ORDER BY ag.priority ASC, a.id ASC`, groupID)
+		ORDER BY a.priority ASC, a.id ASC`, groupID)
 	if err != nil {
 		return nil, err
 	}
@@ -1271,7 +1271,7 @@ func (r *groupRepository) ListAccountsByGroupWithPriority(ctx context.Context, g
 	return out, rows.Err()
 }
 
-// UpdateAccountGroupPriorities 事务内批量更新账号在指定分组内的调度优先级；
+// UpdateAccountGroupPriorities 事务内批量更新账号的调度优先级（分组视角编辑，写 accounts.priority）；
 // 任一账号不在该分组即整体回滚，避免半更新状态。测试注入的非 *sql.DB 执行器降级为逐条直执行。
 func (r *groupRepository) UpdateAccountGroupPriorities(ctx context.Context, groupID int64, updates []service.AccountGroupPriorityUpdate) error {
 	if len(updates) == 0 {
@@ -1293,9 +1293,14 @@ func (r *groupRepository) UpdateAccountGroupPriorities(ctx context.Context, grou
 	}
 
 	for _, u := range updates {
+		// 分组内编辑直通账号级调度优先级（accounts.priority）：
+		// 与账号管理入口共用同一事实来源，调度分层只消费该值。
+		// 关联校验仍要求账号绑定在该分组下，防止从分组视角误改无关账号。
 		result, err := exec.ExecContext(ctx,
-			`UPDATE account_groups SET priority = $1 WHERE group_id = $2 AND account_id = $3`,
-			u.Priority, groupID, u.AccountID)
+			`UPDATE accounts SET priority = $1, updated_at = now()
+			  WHERE id = $2 AND deleted_at IS NULL
+			    AND EXISTS (SELECT 1 FROM account_groups ag WHERE ag.account_id = $2 AND ag.group_id = $3)`,
+			u.Priority, u.AccountID, groupID)
 		if err != nil {
 			return err
 		}
@@ -1313,8 +1318,10 @@ func (r *groupRepository) UpdateAccountGroupPriorities(ctx context.Context, grou
 		}
 		tx = nil
 	}
-	if err := enqueueSchedulerOutbox(ctx, r.sql, service.SchedulerOutboxEventGroupChanged, nil, &groupID, nil); err != nil {
-		logger.LegacyPrintf("repository.group", "[SchedulerOutbox] enqueue group account priority update failed: group=%d err=%v", groupID, err)
+	for _, u := range updates {
+		if err := enqueueSchedulerOutbox(ctx, r.sql, service.SchedulerOutboxEventAccountChanged, &u.AccountID, nil, nil); err != nil {
+			logger.LegacyPrintf("repository.group", "[SchedulerOutbox] enqueue account priority update failed: account=%d err=%v", u.AccountID, err)
+		}
 	}
 	return nil
 }
