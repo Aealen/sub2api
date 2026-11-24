@@ -12,7 +12,7 @@ export default {
       name: '上游',
       status: '状态',
       accounts: '账号数',
-      balance: '余额合计',
+      balance: '整站余额',
       balanceUpdated: '最近同步',
       rateRange: '进价倍率',
       models: '台账模型',

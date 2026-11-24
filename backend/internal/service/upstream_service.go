@@ -72,9 +72,11 @@ type UpstreamInput struct {
 // UpstreamOverview 上游列表聚合行：余额、账号数、倍率区间与台账规模。
 type UpstreamOverview struct {
 	Upstream
-	AccountTotal      int        `json:"account_total"`
-	AccountActive     int        `json:"account_active"`
-	BalanceTotal      float64    `json:"balance_total"`
+	AccountTotal  int `json:"account_total"`
+	AccountActive int `json:"account_active"`
+	// SiteBalance 上游整站余额：同一上游账户的各 API Key 余额相同（站级余额池），
+	// 取账号余额最大值而非求和，避免同一余额按账号数重复放大。
+	SiteBalance       float64    `json:"site_balance"`
 	BalanceUpdatedAt  *time.Time `json:"balance_updated_at"`
 	RateMultiplierMin *float64   `json:"rate_multiplier_min"`
 	RateMultiplierMax *float64   `json:"rate_multiplier_max"`

@@ -12,7 +12,7 @@ export default {
       name: 'Upstream',
       status: 'Status',
       accounts: 'Accounts',
-      balance: 'Total balance',
+      balance: 'Site balance',
       balanceUpdated: 'Last sync',
       rateRange: 'Purchase rate',
       models: 'Ledger models',
