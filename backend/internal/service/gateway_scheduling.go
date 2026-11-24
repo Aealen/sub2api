@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"math"
 	mathrand "math/rand"
 	"sort"
 	"strings"
@@ -227,6 +228,15 @@ func (s *GatewayService) SelectAccountWithLoadAwareness(ctx context.Context, gro
 	}
 	if len(accounts) == 0 {
 		return nil, ErrNoAvailableAccounts
+	}
+	// 分组调度语境下分层键 = 组内优先级（account_groups.priority），详见 groupLayerPriority：
+	// 此前 Account.Priority 装的是账号级 priority，分组管理里编辑的组内优先级从未参与调度
+	// （候选查询只用它排 SQL 返回顺序，调度器的等值分层与排序全部丢弃该顺序）。
+	// 在候选入口就地替换后，负载感知分层、模型路由排序与 legacy 排序恢复「组内优先级 → 负载 → LRU」语义。
+	if groupID != nil && *groupID > 0 {
+		for i := range accounts {
+			accounts[i].Priority = groupLayerPriority(accounts[i], groupID)
+		}
 	}
 	ctx = s.withWindowCostPrefetch(ctx, accounts)
 	ctx = s.withRPMPrefetch(ctx, accounts)
@@ -1703,6 +1713,25 @@ func (s *GatewayService) newSelectionResult(ctx context.Context, account *Accoun
 		ReleaseFunc: release,
 		WaitPlan:    waitPlan,
 	}), nil
+}
+
+// unscheduledGroupLayerPriority 候选缺失分组关联时的降权分层键：
+// 正常情况下调度候选必然属于调度分组；万一因数据不一致缺失关联，
+// 降权到最后而不是保留账号级小值抢占分组内账号。
+const unscheduledGroupLayerPriority = math.MaxInt32
+
+// groupLayerPriority 调度分层键：组内优先级（account_groups.priority）主导分层；
+// 无分组调度（groupID 为空）回退账号级 priority，保持原有语义。
+func groupLayerPriority(acc Account, groupID *int64) int {
+	if groupID == nil || *groupID <= 0 {
+		return acc.Priority
+	}
+	for _, ag := range acc.AccountGroups {
+		if ag.GroupID == *groupID {
+			return ag.Priority
+		}
+	}
+	return unscheduledGroupLayerPriority
 }
 
 // filterByMinPriority 过滤出优先级最小的账号集合
