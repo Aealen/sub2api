@@ -74,8 +74,8 @@ type UpstreamOverview struct {
 	Upstream
 	AccountTotal  int `json:"account_total"`
 	AccountActive int `json:"account_active"`
-	// SiteBalance 上游整站余额：同一上游账户的各 API Key 余额相同（站级余额池），
-	// 取账号余额最大值而非求和，避免同一余额按账号数重复放大。
+	// SiteBalance 上游整站余额：同站所有 API Key 查到的余额相同（站级余额池），
+	// 取第一个非空值即可，不做求和/取大——同一余额按账号数重复放大没有意义。
 	SiteBalance       float64    `json:"site_balance"`
 	BalanceUpdatedAt  *time.Time `json:"balance_updated_at"`
 	RateMultiplierMin *float64   `json:"rate_multiplier_min"`

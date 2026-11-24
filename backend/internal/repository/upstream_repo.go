@@ -175,9 +175,10 @@ func (r *upstreamRepository) ListUpstreamOverview(ctx context.Context) ([]servic
 		       COALESCE(u.contact, ''), COALESCE(u.note, ''), u.status, u.created_at, u.updated_at,
 		       COUNT(a.id) FILTER (WHERE a.deleted_at IS NULL) AS account_total,
 		       COUNT(a.id) FILTER (WHERE a.deleted_at IS NULL AND a.status = 'active') AS account_active,
-		       -- 整站余额语义：同一上游账户下各 API Key 查到的 balance 相同（站级余额池），
-		       -- 取 MAX 即整站余额；SUM 会把同一余额按账号数重复放大。
-		       COALESCE(MAX(a.upstream_balance) FILTER (WHERE a.deleted_at IS NULL), 0) AS balance_total,
+		       -- 整站余额语义：同站所有 API Key 查到的 balance 相同（站级余额池），
+		       -- 取任一非空值即可（MIN 天然忽略 NULL，同值时无歧义）；
+		       -- SUM/MAX 均不妥：SUM 按账号数重复放大，MAX 在多账户时偏向最大值。
+		       COALESCE(MIN(a.upstream_balance) FILTER (WHERE a.deleted_at IS NULL), 0) AS balance_total,
 		       MAX(a.upstream_balance_updated_at) FILTER (WHERE a.deleted_at IS NULL) AS balance_updated_at,
 		       MIN(a.rate_multiplier) FILTER (WHERE a.deleted_at IS NULL) AS rate_min,
 		       MAX(a.rate_multiplier) FILTER (WHERE a.deleted_at IS NULL) AS rate_max,

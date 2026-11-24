@@ -102,8 +102,8 @@ func (r *fakeUpstreamRepo) ListUpstreamOverview(_ context.Context) ([]UpstreamOv
 			if a.Status == "active" {
 				row.AccountActive++
 			}
-			// 与生产聚合一致：整站余额取最大值（同上游账户各 Key 余额相同）
-			if a.UpstreamBalance != nil && *a.UpstreamBalance > row.SiteBalance {
+			// 与生产聚合一致：整站余额取第一个非空值（同站各 Key 余额相同）
+			if row.SiteBalance == 0 && a.UpstreamBalance != nil {
 				row.SiteBalance = *a.UpstreamBalance
 			}
 		}
