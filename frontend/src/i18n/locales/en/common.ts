@@ -218,6 +218,7 @@ export default {
     upstreamManagement: 'Upstreams',
     upstreamList: 'Upstream Library',
     upstreamCompare: 'Price Comparison',
+    upstreamOverview: 'Upstream Overview',
     riskControl: 'Risk Control',
     securityAudit: 'Security Audit',
     contentModeration: 'Content Moderation',

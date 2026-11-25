@@ -736,3 +736,135 @@ func (r *upstreamRepository) DeleteUpstreamModelPrice(ctx context.Context, id in
 	}
 	return nil
 }
+
+// ---------- group upstream links ----------
+
+// groupUpstreamLinkSelect 关联行投影：本站分组、所属上游、上游分组的展示字段一次 JOIN 取全，
+// 列表与按 ID 回读共用，避免逐行二次查询。
+const groupUpstreamLinkSelect = `
+	SELECT l.id, l.group_id, g.name, COALESCE(g.platform, ''), g.rate_multiplier,
+	       ug.upstream_id, u.name, ug.id, ug.name, ug.rate_multiplier,
+	       COALESCE(l.note, ''), l.created_at, l.updated_at
+	  FROM group_upstream_group_links l
+	  JOIN groups g ON g.id = l.group_id AND g.deleted_at IS NULL
+	  JOIN upstream_groups ug ON ug.id = l.upstream_group_id AND ug.deleted_at IS NULL
+	  JOIN upstreams u ON u.id = ug.upstream_id AND u.deleted_at IS NULL`
+
+func scanGroupUpstreamLink(scanner interface{ Scan(...any) error }) (*service.GroupUpstreamLink, error) {
+	link := &service.GroupUpstreamLink{}
+	if err := scanner.Scan(
+		&link.ID, &link.GroupID, &link.GroupName, &link.Platform, &link.GroupRateMultiplier,
+		&link.UpstreamID, &link.UpstreamName, &link.UpstreamGroupID, &link.UpstreamGroupName,
+		&link.UpstreamRateMultiplier, &link.Note, &link.CreatedAt, &link.UpdatedAt,
+	); err != nil {
+		return nil, err
+	}
+	return link, nil
+}
+
+// ListGroupUpstreamLinks 列出全部有效供货关联，按本站分组/上游/上游分组名排序。
+func (r *upstreamRepository) ListGroupUpstreamLinks(ctx context.Context) ([]service.GroupUpstreamLink, error) {
+	rows, err := r.db.QueryContext(ctx, groupUpstreamLinkSelect+`
+		 WHERE l.deleted_at IS NULL
+		 ORDER BY lower(g.name), lower(u.name), lower(ug.name)`)
+	if err != nil {
+		return nil, fmt.Errorf("list group upstream links: %w", err)
+	}
+	defer rows.Close()
+
+	list := make([]service.GroupUpstreamLink, 0, 8)
+	for rows.Next() {
+		link, scanErr := scanGroupUpstreamLink(rows)
+		if scanErr != nil {
+			return nil, fmt.Errorf("scan group upstream link: %w", scanErr)
+		}
+		list = append(list, *link)
+	}
+	return list, rows.Err()
+}
+
+// updateGroupUpstreamLinkNote 覆盖已有有效关联的 note；无有效行时返回 sql.ErrNoRows 由调用方决定插入。
+func updateGroupUpstreamLinkNote(ctx context.Context, tx *sql.Tx, in service.GroupUpstreamLinkInput) (int64, error) {
+	var id int64
+	err := tx.QueryRowContext(ctx,
+		`UPDATE group_upstream_group_links SET note = NULLIF($3, ''), updated_at = now()
+		  WHERE group_id = $1 AND upstream_group_id = $2 AND deleted_at IS NULL
+		  RETURNING id`, in.GroupID, in.UpstreamGroupID, in.Note).Scan(&id)
+	return id, err
+}
+
+// UpsertGroupUpstreamLink 建立或更新供货关联；同一 (本站分组, 上游分组) 只保留一条有效记录。
+func (r *upstreamRepository) UpsertGroupUpstreamLink(ctx context.Context, in service.GroupUpstreamLinkInput) (*service.GroupUpstreamLink, error) {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("begin upsert group upstream link: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	// 两端都必须存在且未软删；任一端缺失即视为关联目标不存在（同时避免裸 FK 报错泄漏表结构）。
+	var exists int64
+	if err := tx.QueryRowContext(ctx,
+		`SELECT id FROM groups WHERE id = $1 AND deleted_at IS NULL`, in.GroupID).Scan(&exists); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, service.ErrGroupUpstreamLinkNotFound
+		}
+		return nil, fmt.Errorf("check group for link: %w", err)
+	}
+	if err := tx.QueryRowContext(ctx,
+		`SELECT id FROM upstream_groups WHERE id = $1 AND deleted_at IS NULL`, in.UpstreamGroupID).Scan(&exists); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, service.ErrGroupUpstreamLinkNotFound
+		}
+		return nil, fmt.Errorf("check upstream group for link: %w", err)
+	}
+
+	linkID, err := updateGroupUpstreamLinkNote(ctx, tx, in)
+	if err == sql.ErrNoRows {
+		// 无有效关联：新建；并发插入撞唯一索引时回滚到保存点后改为更新，保证幂等。
+		// 语句失败会让整个事务进入 aborted 状态，因此必须先建保存点才能安全回退。
+		if _, err := tx.ExecContext(ctx, `SAVEPOINT group_upstream_link_upsert`); err != nil {
+			return nil, fmt.Errorf("savepoint group upstream link: %w", err)
+		}
+		insertErr := tx.QueryRowContext(ctx,
+			`INSERT INTO group_upstream_group_links (group_id, upstream_group_id, note)
+			 VALUES ($1, $2, NULLIF($3, ''))
+			 RETURNING id`, in.GroupID, in.UpstreamGroupID, in.Note).Scan(&linkID)
+		if insertErr != nil {
+			if !isUniqueViolation(insertErr) {
+				return nil, fmt.Errorf("create group upstream link: %w", insertErr)
+			}
+			if _, err := tx.ExecContext(ctx, `ROLLBACK TO SAVEPOINT group_upstream_link_upsert`); err != nil {
+				return nil, fmt.Errorf("rollback group upstream link savepoint: %w", err)
+			}
+			if linkID, err = updateGroupUpstreamLinkNote(ctx, tx, in); err != nil {
+				return nil, fmt.Errorf("update group upstream link after conflict: %w", err)
+			}
+		}
+	} else if err != nil {
+		return nil, fmt.Errorf("update group upstream link: %w", err)
+	}
+
+	link, err := scanGroupUpstreamLink(tx.QueryRowContext(ctx,
+		groupUpstreamLinkSelect+` WHERE l.deleted_at IS NULL AND l.id = $1`, linkID))
+	if err != nil {
+		return nil, fmt.Errorf("load group upstream link: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("commit group upstream link: %w", err)
+	}
+	return link, nil
+}
+
+// DeleteGroupUpstreamLink 软删关联；关联已是软删状态时按不存在处理。
+func (r *upstreamRepository) DeleteGroupUpstreamLink(ctx context.Context, id int64) error {
+	res, err := r.db.ExecContext(ctx,
+		`UPDATE group_upstream_group_links SET deleted_at = now(), updated_at = now()
+		  WHERE id = $1 AND deleted_at IS NULL`, id)
+	if err != nil {
+		return fmt.Errorf("delete group upstream link: %w", err)
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return service.ErrGroupUpstreamLinkNotFound
+	}
+	return nil
+}

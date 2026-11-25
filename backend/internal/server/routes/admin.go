@@ -474,16 +474,20 @@ func registerAccountRoutes(admin *gin.RouterGroup, h *handler.Handlers, stepUpAu
 
 // registerUpstreamRoutes 上游管理：上游库、上游侧分组、模型价格台账与跨上游比价。
 //
-// 静态路径（compare / unassigned-accounts / import-bundle）必须先于 /:id 注册，
-// 保证「compare」这类词不会被当成上游 ID 解析。
+// 静态路径（overview / compare / unassigned-accounts / import-bundle / group-links）
+// 必须先于 /:id 注册，保证「compare」这类词不会被当成上游 ID 解析。
 func registerUpstreamRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 	upstreams := admin.Group("/upstreams")
 	{
 		upstreams.GET("", h.Admin.Upstream.List)
 		upstreams.POST("", h.Admin.Upstream.Create)
+		upstreams.GET("/overview", h.Admin.Upstream.Overview)
 		upstreams.GET("/compare", h.Admin.Upstream.Compare)
 		upstreams.GET("/unassigned-accounts", h.Admin.Upstream.ListUnassignedAccounts)
 		upstreams.POST("/import-bundle", h.Admin.Upstream.ImportBundle)
+		upstreams.GET("/group-links", h.Admin.Upstream.ListGroupLinks)
+		upstreams.POST("/group-links", h.Admin.Upstream.UpsertGroupLink)
+		upstreams.DELETE("/group-links/:linkId", h.Admin.Upstream.DeleteGroupLink)
 
 		upstreams.GET("/:id", h.Admin.Upstream.GetByID)
 		upstreams.PUT("/:id", h.Admin.Upstream.Update)

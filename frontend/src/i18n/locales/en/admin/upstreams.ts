@@ -135,6 +135,87 @@ export default {
       names: 'Upstreams',
       model: 'Model'
     },
+    overview: {
+      title: 'Upstream overview',
+      description:
+        'See each upstream as a site group view or an upstream view: site balance, supplying groups, the spread between sell and purchase rates, and the real margin in the selected window',
+      searchPlaceholder: 'Search site group or upstream',
+      viewByGroup: 'By site group',
+      viewByUpstream: 'By upstream',
+      windowDays: '{days} days',
+      balance: {
+        title: 'Upstream balances',
+        siteBalance: 'Site balance',
+        sync: 'Last sync',
+        accounts: 'Accounts',
+        groups: 'Upstream groups',
+        alert: 'Low balance',
+        empty: 'No upstreams yet. Create one in the upstream library first',
+        expand: 'Show all {count} upstreams',
+        collapse: 'Collapse'
+      },
+      columns: {
+        group: 'Site group',
+        platform: 'Platform',
+        groupRate: 'Sell rate D',
+        upstream: 'Upstream',
+        status: 'Status',
+        balance: 'Site balance',
+        accounts: 'Accounts',
+        upstreamGroup: 'Upstream group',
+        purchaseRate: "Purchase rate U'",
+        derivedMargin: 'Derived margin',
+        actualProfit: 'Real profit (this upstream)',
+        actualMargin: 'Real margin',
+        actions: 'Actions'
+      },
+      primary: 'Primary',
+      noFlow: 'No traffic yet',
+      noData: '—',
+      link: {
+        create: 'Create link',
+        unlink: 'Remove link',
+        confirmTitle: 'Remove supply link',
+        confirmMessage:
+          'Remove the link between site group "{group}" and upstream "{upstream}" group "{upstreamGroup}"? Once removed, this pair no longer counts toward purchase rate and margin.',
+        unlinked: 'Supply link removed',
+        unlinkFailed: 'Failed to remove the supply link'
+      },
+      dialog: {
+        title: 'Create supply link',
+        group: 'Site group',
+        groupPlaceholder: 'Select a site group',
+        upstreamGroup: 'Upstream group',
+        upstreamGroupPlaceholder: 'Select an upstream group',
+        upstreamGroupLoading: 'Loading upstream groups…',
+        upstreamGroupEmpty:
+          'No upstream groups to pick yet. Add groups to an upstream in the upstream library, then come back to link them',
+        upstreamGroupFailed: 'Some upstream groups failed to load. Try again',
+        note: 'Note',
+        notePlaceholder: 'Optional, e.g. primary supply / backup',
+        saved: 'Supply link saved',
+        saveFailed: 'Failed to save the supply link'
+      },
+      rateDialog: {
+        title: 'Edit upstream purchase rate',
+        upstream: 'Upstream',
+        upstreamGroup: 'Upstream group',
+        rate: 'Purchase rate',
+        ratePlaceholder: 'e.g. 0.3500',
+        hint: 'Changes affect both the price comparison page and the derived margin',
+        saved: 'Upstream purchase rate saved',
+        saveFailed: 'Failed to save the upstream purchase rate',
+        invalidRate: 'Enter a valid number greater than or equal to 0'
+      },
+      unlinked: {
+        title: 'Groups without an upstream link',
+        hint: 'These site groups are not linked to any upstream group yet. Use "Create link" on each item to finish right here'
+      },
+      empty: 'No supply links to show yet. Use "Create link" above to link a site group to an upstream group',
+      messages: {
+        loadFailed: 'Failed to load the upstream overview'
+      }
+    },
     messages: {
       created: 'Upstream created',
       saved: 'Saved',

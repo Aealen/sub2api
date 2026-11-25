@@ -133,6 +133,105 @@ export interface UpstreamCompareResult {
   rows: UpstreamCompareRow[]
 }
 
+/** 经营概览里的上游卡片（余额 / 账号 / 分组 / 是否触发余额预警） */
+export interface UpstreamOverviewCard {
+  id: number
+  name: string
+  status: string
+  site_balance: number
+  balance_updated_at: string | null
+  account_total: number
+  account_active: number
+  group_count: number
+  model_price_count: number
+  rate_multiplier_min: number | null
+  rate_multiplier_max: number | null
+  group_names: string[]
+  balance_alerting: boolean
+}
+
+/** 一条供货关联：本站分组 × 上游分组 */
+export interface UpstreamOverviewLink {
+  id: number
+  group_id: number
+  group_name: string
+  platform: string
+  group_rate_multiplier: number
+  upstream_id: number
+  upstream_name: string
+  upstream_group_id: number
+  upstream_group_name: string
+  upstream_rate_multiplier: number | null
+  /** 推算毛利率（百分比），无法推算时为 null */
+  derived_margin_pct: number | null
+  bound_account_count: number
+}
+
+/** 尚未建立任何上游关联的本站分组 */
+export interface UpstreamUnlinkedGroup {
+  group_id: number
+  group_name: string
+  platform: string
+  group_rate_multiplier: number
+}
+
+/** 某窗口内「本站分组 × 上游」的真实流水 */
+export interface UpstreamFlowRow {
+  group_id: number
+  group_name: string
+  upstream_id: number
+  upstream_name: string
+  window_days: number
+  revenue: number
+  cost: number
+  profit: number
+  /** 实际毛利率（百分比），无营收时为 null */
+  margin_pct: number | null
+}
+
+/** 建立供货关联时可选的上游分组（概览接口一次返回全集，避免前端逐个上游拉取） */
+export interface UpstreamGroupCatalog {
+  id: number
+  upstream_id: number
+  upstream_name: string
+  name: string
+  rate_multiplier: number | null
+}
+
+/** 上游经营概览：上游卡片、供货关联、未关联分组与分组流水 */
+export interface UpstreamOverviewResult {
+  windows: number[]
+  upstreams: UpstreamOverviewCard[]
+  links: UpstreamOverviewLink[]
+  unlinked_groups: UpstreamUnlinkedGroup[]
+  flow: UpstreamFlowRow[]
+  upstream_groups: UpstreamGroupCatalog[]
+}
+
+/** 本站分组 ↔ 上游分组的供货关联（多对多） */
+export interface GroupUpstreamLink {
+  id: number
+  group_id: number
+  group_name: string
+  platform: string
+  group_rate_multiplier: number
+  upstream_id: number
+  upstream_name: string
+  upstream_group_id: number
+  upstream_group_name: string
+  upstream_rate_multiplier: number | null
+  note: string
+  created_at: string
+  updated_at: string
+}
+
+/** 建立/更新供货关联的入参（同一对分组幂等覆盖） */
+export interface GroupUpstreamLinkInput {
+  group_id: number
+  upstream_group_id: number
+  note?: string
+}
+
 export interface UnassignedAccountHost {
   base_url: string
   host: string
@@ -299,6 +398,42 @@ export async function compare(params?: {
   return data
 }
 
+/** 上游经营概览：上游卡片、供货关联、未关联分组与分组流水 */
+export async function getOverview(): Promise<UpstreamOverviewResult> {
+  const { data } = await apiClient.get<UpstreamOverviewResult>('/admin/upstreams/overview')
+  return data
+}
+
+/** 供货关联列表（本站分组 ↔ 上游分组） */
+export async function listGroupLinks(): Promise<{ items: GroupUpstreamLink[] }> {
+  const { data } = await apiClient.get<{ items: GroupUpstreamLink[] }>(
+    '/admin/upstreams/group-links'
+  )
+  return data
+}
+
+/** 建立/更新一条供货关联（同一对分组幂等覆盖） */
+export async function upsertGroupLink(input: GroupUpstreamLinkInput): Promise<GroupUpstreamLink> {
+  const { data } = await apiClient.post<GroupUpstreamLink>(
+    '/admin/upstreams/group-links',
+    input
+  )
+  return data
+}
+
+/** 解除一条供货关联 */
+export async function deleteGroupLink(linkId: number): Promise<void> {
+  await apiClient.delete(`/admin/upstreams/group-links/${linkId}`)
+}
+
+/** 某个上游下的全部上游侧分组（建立供货关联时供选择） */
+export async function listGroups(id: number): Promise<{ items: UpstreamGroup[] }> {
+  const { data } = await apiClient.get<{ items: UpstreamGroup[] }>(
+    `/admin/upstreams/${id}/groups`
+  )
+  return data
+}
+
 const upstreamsAPI = {
   list,
   create,
@@ -309,11 +444,16 @@ const upstreamsAPI = {
   assignAccounts,
   upsertGroup,
   deleteGroup,
+  listGroups,
   upsertModelPrice,
   deleteModelPrice,
   importModelPrices,
   importBundle,
-  compare
+  compare,
+  getOverview,
+  listGroupLinks,
+  upsertGroupLink,
+  deleteGroupLink
 }
 
 export default upstreamsAPI
