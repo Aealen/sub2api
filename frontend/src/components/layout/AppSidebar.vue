@@ -932,6 +932,7 @@ const adminNavItems = computed((): NavItem[] => {
       children: [
         { path: '/admin/upstreams/list', label: t('nav.upstreamList'), icon: PriceTagIcon },
         { path: '/admin/upstreams/compare', label: t('nav.upstreamCompare'), icon: ChartIcon },
+        { path: '/admin/upstreams/overview', label: t('nav.upstreamOverview'), icon: ChartIcon },
       ],
     },
     { path: '/admin/prompt-rules', label: t('nav.promptRules'), icon: PromptIcon },

@@ -24,6 +24,8 @@ var (
 	ErrUpstreamGroupNotFound = infraerrors.NotFound("UPSTREAM_GROUP_NOT_FOUND", "upstream group not found")
 	// ErrUpstreamModelPriceNotFound 上游模型价格台账条目不存在。
 	ErrUpstreamModelPriceNotFound = infraerrors.NotFound("UPSTREAM_MODEL_PRICE_NOT_FOUND", "upstream model price not found")
+	// ErrGroupUpstreamLinkNotFound 本站分组与上游分组的供货关联不存在（含任一端已软删）。
+	ErrGroupUpstreamLinkNotFound = infraerrors.NotFound("GROUP_UPSTREAM_LINK_NOT_FOUND", "group upstream link not found")
 )
 
 // 上游状态与价格来源常量。
@@ -145,6 +147,30 @@ type UpstreamGroupInput struct {
 	PeakEnd            string   `json:"peak_end"`
 	Source             string   `json:"source"`
 	Note               string   `json:"note"`
+}
+
+// GroupUpstreamLink 本站分组到上游分组的供货关联（多对多）。
+type GroupUpstreamLink struct {
+	ID                     int64     `json:"id"`
+	GroupID                int64     `json:"group_id"`
+	GroupName              string    `json:"group_name"`
+	Platform               string    `json:"platform"`
+	GroupRateMultiplier    float64   `json:"group_rate_multiplier"`
+	UpstreamID             int64     `json:"upstream_id"`
+	UpstreamName           string    `json:"upstream_name"`
+	UpstreamGroupID        int64     `json:"upstream_group_id"`
+	UpstreamGroupName      string    `json:"upstream_group_name"`
+	UpstreamRateMultiplier *float64  `json:"upstream_rate_multiplier"`
+	Note                   string    `json:"note"`
+	CreatedAt              time.Time `json:"created_at"`
+	UpdatedAt              time.Time `json:"updated_at"`
+}
+
+// GroupUpstreamLinkInput 建立/更新关联的入参。
+type GroupUpstreamLinkInput struct {
+	GroupID         int64  `json:"group_id"`
+	UpstreamGroupID int64  `json:"upstream_group_id"`
+	Note            string `json:"note"`
 }
 
 // UpstreamModelPrice 上游模型价格台账条目。
@@ -292,6 +318,18 @@ type UpstreamRepository interface {
 	GetUpstreamGroup(ctx context.Context, id int64) (*UpstreamGroup, error)
 	UpsertUpstreamGroup(ctx context.Context, g *UpstreamGroup) error
 	DeleteUpstreamGroup(ctx context.Context, id int64) error
+
+	ListGroupUpstreamLinks(ctx context.Context) ([]GroupUpstreamLink, error)
+	UpsertGroupUpstreamLink(ctx context.Context, in GroupUpstreamLinkInput) (*GroupUpstreamLink, error)
+	DeleteGroupUpstreamLink(ctx context.Context, id int64) error
+
+	// 经营概览（只读聚合）：余额预警标记、分组×上游可服务账号数、未关联分组、分组流水窗口聚合。
+	ListUpstreamBalanceAlerting(ctx context.Context) (map[int64]bool, error)
+	ListGroupUpstreamBoundAccountCounts(ctx context.Context) ([]GroupUpstreamBoundCount, error)
+	// ListUpstreamGroupOptions 全部有效上游分组（含所属上游名），供前端建立供货关联时选择。
+	ListUpstreamGroupOptions(ctx context.Context) ([]UpstreamGroupOption, error)
+	ListUnlinkedGroups(ctx context.Context) ([]UpstreamUnlinkedGroup, error)
+	ListGroupUpstreamFlow(ctx context.Context, windows []int) ([]GroupUpstreamFlowRow, error)
 
 	ListUpstreamModelPrices(ctx context.Context, upstreamID int64) ([]UpstreamModelPrice, error)
 	ListAllUpstreamModelPrices(ctx context.Context) ([]UpstreamModelPrice, error)
@@ -525,6 +563,38 @@ func (s *UpstreamService) DeleteGroup(ctx context.Context, upstreamID, groupID i
 		return ErrUpstreamGroupNotFound
 	}
 	return s.repo.DeleteUpstreamGroup(ctx, groupID)
+}
+
+// ListGroupLinks 本站分组 ↔ 上游分组的供货关联全量列表。
+func (s *UpstreamService) ListGroupLinks(ctx context.Context) ([]GroupUpstreamLink, error) {
+	links, err := s.repo.ListGroupUpstreamLinks(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if links == nil {
+		links = []GroupUpstreamLink{}
+	}
+	return links, nil
+}
+
+// UpsertGroupLink 建立或更新一条供货关联；同一对 (本站分组, 上游分组) 幂等覆盖 note。
+func (s *UpstreamService) UpsertGroupLink(ctx context.Context, in GroupUpstreamLinkInput) (*GroupUpstreamLink, error) {
+	if in.GroupID <= 0 {
+		return nil, infraerrors.BadRequest("GROUP_UPSTREAM_LINK_GROUP_REQUIRED", "group_id is required")
+	}
+	if in.UpstreamGroupID <= 0 {
+		return nil, infraerrors.BadRequest("GROUP_UPSTREAM_LINK_UPSTREAM_GROUP_REQUIRED", "upstream_group_id is required")
+	}
+	in.Note = strings.TrimSpace(in.Note)
+	return s.repo.UpsertGroupUpstreamLink(ctx, in)
+}
+
+// DeleteGroupLink 软删一条供货关联。
+func (s *UpstreamService) DeleteGroupLink(ctx context.Context, id int64) error {
+	if id <= 0 {
+		return ErrGroupUpstreamLinkNotFound
+	}
+	return s.repo.DeleteGroupUpstreamLink(ctx, id)
 }
 
 // UpsertModelPrice 单条台账写入。

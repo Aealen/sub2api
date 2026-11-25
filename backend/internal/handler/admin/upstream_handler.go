@@ -42,6 +42,19 @@ func (h *UpstreamHandler) List(c *gin.Context) {
 	response.Success(c, gin.H{"items": items, "total": len(items)})
 }
 
+// Overview 上游经营概览：上游卡片、供货关联、未关联分组与分组流水（7/30 天窗口）。
+func (h *UpstreamHandler) Overview(c *gin.Context) {
+	if !h.available(c) {
+		return
+	}
+	result, err := h.upstreamService.GetOverview(c.Request.Context())
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, result)
+}
+
 // Create 新建上游。
 func (h *UpstreamHandler) Create(c *gin.Context) {
 	if !h.available(c) {
@@ -207,6 +220,54 @@ func (h *UpstreamHandler) DeleteGroup(c *gin.Context) {
 		return
 	}
 	if err := h.upstreamService.DeleteGroup(c.Request.Context(), id, groupID); err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, gin.H{"deleted": true})
+}
+
+// ListGroupLinks 本站分组 ↔ 上游分组的供货关联列表。
+func (h *UpstreamHandler) ListGroupLinks(c *gin.Context) {
+	if !h.available(c) {
+		return
+	}
+	links, err := h.upstreamService.ListGroupLinks(c.Request.Context())
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, gin.H{"items": links})
+}
+
+// UpsertGroupLink 建立或更新供货关联（同一对分组幂等覆盖）。
+func (h *UpstreamHandler) UpsertGroupLink(c *gin.Context) {
+	if !h.available(c) {
+		return
+	}
+	var req service.GroupUpstreamLinkInput
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "invalid request body")
+		return
+	}
+	link, err := h.upstreamService.UpsertGroupLink(c.Request.Context(), req)
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+	response.Success(c, link)
+}
+
+// DeleteGroupLink 软删供货关联。
+func (h *UpstreamHandler) DeleteGroupLink(c *gin.Context) {
+	if !h.available(c) {
+		return
+	}
+	linkID, err := strconv.ParseInt(c.Param("linkId"), 10, 64)
+	if err != nil || linkID <= 0 {
+		response.BadRequest(c, "invalid link id")
+		return
+	}
+	if err := h.upstreamService.DeleteGroupLink(c.Request.Context(), linkID); err != nil {
 		response.ErrorFrom(c, err)
 		return
 	}

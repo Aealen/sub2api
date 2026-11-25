@@ -135,6 +135,86 @@ export default {
       names: '上游',
       model: '模型'
     },
+    overview: {
+      title: '上游总览',
+      description:
+        '按「本站分组 / 上游」两个视角查看每家上游的整站余额、供货分组、售价与进价差，以及所选窗口内的真实毛利',
+      searchPlaceholder: '搜索本站分组或上游',
+      viewByGroup: '按本站分组',
+      viewByUpstream: '按上游',
+      windowDays: '{days} 天',
+      balance: {
+        title: '上游余额',
+        siteBalance: '整站余额',
+        sync: '最近同步',
+        accounts: '账号数',
+        groups: '上游分组',
+        alert: '余额预警',
+        empty: '还没有上游，先去「上游库」新建一个',
+        expand: '展开全部 {count} 家上游',
+        collapse: '收起'
+      },
+      columns: {
+        group: '本站分组',
+        platform: '平台',
+        groupRate: '售价 D',
+        upstream: '上游',
+        status: '状态',
+        balance: '整站余额',
+        accounts: '账号数',
+        upstreamGroup: '上游分组',
+        purchaseRate: "进价 U'",
+        derivedMargin: '推算毛利率',
+        actualProfit: '实际毛利（该上游）',
+        actualMargin: '实际毛利率',
+        actions: '操作'
+      },
+      primary: '主力',
+      noFlow: '无流水',
+      noData: '—',
+      link: {
+        create: '建立关联',
+        unlink: '解除关联',
+        confirmTitle: '解除供货关联',
+        confirmMessage:
+          '确定解除本站分组「{group}」与上游「{upstream}」的分组「{upstreamGroup}」之间的关联？解除后该组合不再参与进价与毛利计算。',
+        unlinked: '已解除供货关联',
+        unlinkFailed: '解除供货关联失败'
+      },
+      dialog: {
+        title: '建立供货关联',
+        group: '本站分组',
+        groupPlaceholder: '选择本站分组',
+        upstreamGroup: '上游分组',
+        upstreamGroupPlaceholder: '选择上游分组',
+        upstreamGroupLoading: '正在加载上游分组…',
+        upstreamGroupEmpty: '还没有可选的上游分组：先到「上游库」给上游添加分组，再回来关联',
+        upstreamGroupFailed: '部分上游分组加载失败，请重试',
+        note: '备注',
+        notePlaceholder: '可选，例如：主力供货 / 备用',
+        saved: '供货关联已保存',
+        saveFailed: '保存供货关联失败'
+      },
+      rateDialog: {
+        title: '编辑上游进价倍率',
+        upstream: '上游',
+        upstreamGroup: '上游分组',
+        rate: '进价倍率',
+        ratePlaceholder: '例如 0.3500',
+        hint: '修改会同时影响比价页与推算毛利率',
+        saved: '上游进价倍率已保存',
+        saveFailed: '保存上游进价倍率失败',
+        invalidRate: '请输入不小于 0 的有效数字'
+      },
+      unlinked: {
+        title: '未建立上游关联的分组',
+        hint: '这些本站分组还没有关联任何上游分组；点每一项右侧的「建立关联」即可就地完成，无需离开本页'
+      },
+      empty: '还没有可展示的供货关联：点上方「建立关联」把本站分组关联到上游分组',
+      messages: {
+        loadFailed: '加载上游总览失败'
+      }
+    },
     messages: {
       created: '上游已创建',
       saved: '已保存',

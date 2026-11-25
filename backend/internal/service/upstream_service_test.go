@@ -2,10 +2,14 @@ package service
 
 import (
 	"context"
+	"errors"
 	"math"
+	"net/http"
 	"strings"
 	"testing"
 	"time"
+
+	infraerrors "github.com/Wei-Shaw/sub2api/internal/pkg/errors"
 )
 
 // ---------- fake repository ----------
@@ -15,7 +19,15 @@ type fakeUpstreamRepo struct {
 	accounts  []UpstreamAccountRow
 	groups    []UpstreamGroup
 	prices    []UpstreamModelPrice
+	links     []GroupUpstreamLink
 	nextID    int64
+
+	// 经营概览相关（默认零值，各测试按需注入）
+	alerting     map[int64]bool
+	boundCounts  []GroupUpstreamBoundCount
+	groupOptions []UpstreamGroupOption
+	unlinked     []UpstreamUnlinkedGroup
+	flow         []GroupUpstreamFlowRow
 }
 
 func newFakeUpstreamRepo() *fakeUpstreamRepo {
@@ -247,6 +259,60 @@ func (r *fakeUpstreamRepo) DeleteUpstreamModelPrice(_ context.Context, id int64)
 		}
 	}
 	return ErrUpstreamModelPriceNotFound
+}
+
+func (r *fakeUpstreamRepo) ListGroupUpstreamLinks(_ context.Context) ([]GroupUpstreamLink, error) {
+	return append([]GroupUpstreamLink(nil), r.links...), nil
+}
+
+func (r *fakeUpstreamRepo) UpsertGroupUpstreamLink(_ context.Context, in GroupUpstreamLinkInput) (*GroupUpstreamLink, error) {
+	for i := range r.links {
+		if r.links[i].GroupID == in.GroupID && r.links[i].UpstreamGroupID == in.UpstreamGroupID {
+			r.links[i].Note = in.Note
+			link := r.links[i]
+			return &link, nil
+		}
+	}
+	link := GroupUpstreamLink{
+		ID:              r.id(),
+		GroupID:         in.GroupID,
+		UpstreamGroupID: in.UpstreamGroupID,
+		Note:            in.Note,
+		CreatedAt:       time.Now(),
+		UpdatedAt:       time.Now(),
+	}
+	r.links = append(r.links, link)
+	return &link, nil
+}
+
+func (r *fakeUpstreamRepo) DeleteGroupUpstreamLink(_ context.Context, id int64) error {
+	for i := range r.links {
+		if r.links[i].ID == id {
+			r.links = append(r.links[:i], r.links[i+1:]...)
+			return nil
+		}
+	}
+	return ErrGroupUpstreamLinkNotFound
+}
+
+func (r *fakeUpstreamRepo) ListUpstreamBalanceAlerting(_ context.Context) (map[int64]bool, error) {
+	return r.alerting, nil
+}
+
+func (r *fakeUpstreamRepo) ListGroupUpstreamBoundAccountCounts(_ context.Context) ([]GroupUpstreamBoundCount, error) {
+	return r.boundCounts, nil
+}
+
+func (r *fakeUpstreamRepo) ListUpstreamGroupOptions(_ context.Context) ([]UpstreamGroupOption, error) {
+	return r.groupOptions, nil
+}
+
+func (r *fakeUpstreamRepo) ListUnlinkedGroups(_ context.Context) ([]UpstreamUnlinkedGroup, error) {
+	return r.unlinked, nil
+}
+
+func (r *fakeUpstreamRepo) ListGroupUpstreamFlow(_ context.Context, _ []int) ([]GroupUpstreamFlowRow, error) {
+	return r.flow, nil
 }
 
 func equalInt64Ptr(a, b *int64) bool {
@@ -583,5 +649,114 @@ func TestCompareModelsGroupRateDerivationOnly(t *testing.T) {
 	}
 	if cell.InputPricePerToken == nil || math.Abs(*cell.InputPricePerToken-3e-06*0.05) > 1e-18 {
 		t.Fatalf("cell price = %v, want %v", derefFloat(cell.InputPricePerToken), 3e-06*0.05)
+	}
+}
+
+// ---------- group upstream links ----------
+
+func TestListGroupLinksReturnsEmptySliceWhenNoLinks(t *testing.T) {
+	svc := NewUpstreamService(newFakeUpstreamRepo(), nil)
+	links, err := svc.ListGroupLinks(context.Background())
+	if err != nil {
+		t.Fatalf("ListGroupLinks error: %v", err)
+	}
+	if links == nil {
+		t.Fatal("links = nil, want empty slice so JSON renders []")
+	}
+	if len(links) != 0 {
+		t.Fatalf("links = %d, want 0", len(links))
+	}
+}
+
+func TestUpsertGroupLinkRejectsInvalidIDs(t *testing.T) {
+	cases := []struct {
+		name string
+		in   GroupUpstreamLinkInput
+	}{
+		{"group_id missing", GroupUpstreamLinkInput{UpstreamGroupID: 2}},
+		{"group_id negative", GroupUpstreamLinkInput{GroupID: -1, UpstreamGroupID: 2}},
+		{"upstream_group_id missing", GroupUpstreamLinkInput{GroupID: 1}},
+		{"upstream_group_id negative", GroupUpstreamLinkInput{GroupID: 1, UpstreamGroupID: -2}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			repo := newFakeUpstreamRepo()
+			svc := NewUpstreamService(repo, nil)
+			link, err := svc.UpsertGroupLink(context.Background(), tc.in)
+			if err == nil {
+				t.Fatalf("expected error, got link %+v", link)
+			}
+			if code := infraerrors.Code(err); code != http.StatusBadRequest {
+				t.Fatalf("error code = %d, want 400 (err=%v)", code, err)
+			}
+			if len(repo.links) != 0 {
+				t.Fatalf("repo should not be called, links = %d", len(repo.links))
+			}
+		})
+	}
+}
+
+func TestUpsertGroupLinkForwardsAndTrimsNote(t *testing.T) {
+	ctx := context.Background()
+	repo := newFakeUpstreamRepo()
+	svc := NewUpstreamService(repo, nil)
+
+	link, err := svc.UpsertGroupLink(ctx, GroupUpstreamLinkInput{
+		GroupID: 3, UpstreamGroupID: 7, Note: "  主力通道  ",
+	})
+	if err != nil {
+		t.Fatalf("UpsertGroupLink error: %v", err)
+	}
+	if link.GroupID != 3 || link.UpstreamGroupID != 7 || link.Note != "主力通道" {
+		t.Fatalf("link = %+v, want group 3 / upstream group 7 / note 主力通道", link)
+	}
+	if link.ID == 0 {
+		t.Fatal("link ID should be assigned by repository")
+	}
+
+	// 同一对 (group, upstream group) 再次提交只更新 note，不新增行
+	again, err := svc.UpsertGroupLink(ctx, GroupUpstreamLinkInput{GroupID: 3, UpstreamGroupID: 7, Note: "备用"})
+	if err != nil {
+		t.Fatalf("second UpsertGroupLink error: %v", err)
+	}
+	if again.ID != link.ID {
+		t.Fatalf("second upsert id = %d, want %d (idempotent update)", again.ID, link.ID)
+	}
+	if again.Note != "备用" {
+		t.Fatalf("second upsert note = %q, want 备用", again.Note)
+	}
+	list, err := svc.ListGroupLinks(ctx)
+	if err != nil {
+		t.Fatalf("ListGroupLinks error: %v", err)
+	}
+	if len(list) != 1 {
+		t.Fatalf("links = %d, want 1", len(list))
+	}
+}
+
+func TestDeleteGroupLinkRejectsNonPositiveID(t *testing.T) {
+	svc := NewUpstreamService(newFakeUpstreamRepo(), nil)
+	for _, id := range []int64{0, -5} {
+		err := svc.DeleteGroupLink(context.Background(), id)
+		if !errors.Is(err, ErrGroupUpstreamLinkNotFound) {
+			t.Fatalf("DeleteGroupLink(%d) error = %v, want ErrGroupUpstreamLinkNotFound", id, err)
+		}
+	}
+}
+
+func TestDeleteGroupLinkForwardsToRepository(t *testing.T) {
+	ctx := context.Background()
+	repo := newFakeUpstreamRepo()
+	repo.links = []GroupUpstreamLink{{ID: 11, GroupID: 1, UpstreamGroupID: 2}}
+	svc := NewUpstreamService(repo, nil)
+
+	if err := svc.DeleteGroupLink(ctx, 11); err != nil {
+		t.Fatalf("DeleteGroupLink error: %v", err)
+	}
+	if len(repo.links) != 0 {
+		t.Fatalf("links = %d, want 0 after delete", len(repo.links))
+	}
+	if err := svc.DeleteGroupLink(ctx, 11); !errors.Is(err, ErrGroupUpstreamLinkNotFound) {
+		t.Fatalf("second delete error = %v, want ErrGroupUpstreamLinkNotFound", err)
 	}
 }

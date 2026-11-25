@@ -218,6 +218,7 @@ export default {
     upstreamManagement: '上游管理',
     upstreamList: '上游库',
     upstreamCompare: '跨上游比价',
+    upstreamOverview: '上游总览',
     riskControl: '风控中心',
     securityAudit: '安全审计',
     contentModeration: '内容审计',
